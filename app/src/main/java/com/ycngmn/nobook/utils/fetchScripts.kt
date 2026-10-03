@@ -21,7 +21,7 @@ suspend fun fetchScripts(
     fallbackContent: (Int) -> String
 ): String {
     val httpClient = HttpClient(OkHttp)
-    return buildString {
+    val scriptContent = buildString {
         scripts.filter { it.isEnabled }.forEach { script ->
             val content =
                 runCatching {
@@ -37,4 +37,14 @@ suspend fun fetchScripts(
             append(content)
         }
     }
+    return minifyJavaScript(scriptContent)
+}
+
+// Simple minification: remove comments and extra whitespace
+private fun minifyJavaScript(js: String): String {
+    return js
+        .replace(Regex("//.*?(\n|$)"), "\n")  // Remove line comments
+        .replace(Regex("/\\*.*?\\*/"), "")     // Remove block comments
+        .replace(Regex("\\s+"), " ")           // Collapse whitespace
+        .trim()
 }
