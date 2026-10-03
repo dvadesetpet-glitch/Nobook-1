@@ -57,6 +57,8 @@ class MainViewModel(
             Script(settings.amoledBlack.value, R.raw.amoled_black, "amoled_black.js"),
             Script(settings.hideSuggested.value, R.raw.hide_suggested, "hide_suggested.js"),
             Script(settings.hideReels.value, R.raw.hide_reels, "hide_reels.js"),
+            Script(true, R.raw.watch_history, "watch_history.js"),
+            Script(!settings.hideReels.value, R.raw.reel_controls, "reel_controls.js"),
             Script(settings.hideStories.value, R.raw.hide_stories, "hide_stories.js"),
             Script(settings.hidePeopleYouMayKnow.value, R.raw.hide_pymk, "hide_pymk.js"),
             Script(settings.hideGroups.value, R.raw.hide_groups, "hide_groups.js")
