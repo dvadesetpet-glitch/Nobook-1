@@ -4,16 +4,19 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.ycngmn.nobook.data.local.dao.AccountDao
 import com.ycngmn.nobook.data.local.dao.WatchHistoryDao
+import com.ycngmn.nobook.data.local.entity.Account
 import com.ycngmn.nobook.data.local.entity.WatchHistory
 
 @Database(
-    entities = [WatchHistory::class],
+    entities = [WatchHistory::class, Account::class],
     version = 1,
     exportSchema = false
 )
 abstract class NobookDatabase : RoomDatabase() {
     abstract fun watchHistoryDao(): WatchHistoryDao
+    abstract fun accountDao(): AccountDao
 
     companion object {
         @Volatile
