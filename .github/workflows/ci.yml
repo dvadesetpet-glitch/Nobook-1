@@ -25,7 +25,9 @@ jobs:
         run: ./gradlew test --console=plain 2>&1 | tee gradle.log; exit ${PIPESTATUS[0]}
       - name: Surface Gradle errors as annotations
         if: failure()
-        run: grep -E "^e: |error:|What went wrong|Caused by|Execution failed|> " -A3 gradle.log | head -60 | sed 's/^/::error::/' | head -40 || true
+        run: |
+          msg=$(grep -E "^e: |error:|What went wrong|Caused by|Execution failed" -A4 gradle.log | head -40 | head -c 3500 | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+          echo "::error title=Gradle failure::$msg"
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v4
