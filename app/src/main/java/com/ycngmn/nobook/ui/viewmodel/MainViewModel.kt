@@ -55,6 +55,7 @@ class MainViewModel(
             Script(true, R.raw.fix_media_source, "fix_media_source.js"),
             Script(true, R.raw.hide_open_app, "hide_open_app.js"),
             Script(true, R.raw.haptic_feedback, "haptic_feedback.js"),
+            Script(true, R.raw.remove_all, "remove_all.js"),
             Script(settings.enableDownloadContent.value, R.raw.download_content, "download_content.js"),
             Script(settings.enableCopyToClipboard.value, R.raw.copy_to_clipboard, "copy_to_clipboard.js"),
             Script(settings.stickyNavbar.value, R.raw.sticky_navbar, "sticky_navbar.js"),
