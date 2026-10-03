@@ -84,6 +84,11 @@
 - `AdFilteringBridge.reportBlocked(total)` -> MainViewModel.blockedAdCount -> shown in Settings Remove Ads item
 - Separate file because remote SCRIPT_SRC (upstream ycngmn/Nobook) overrides local adblock.js when online
 
+## Phase 2.D - Responsive Layouts (done, scoped)
+- `ui/components/AdaptiveContainer.kt`: centers content, max 640dp. Used in Settings, WatchHistory, Accounts screens
+- `rememberAutoDesktop` now keyed on orientation + smallestScreenWidthDp (was stale after rotation)
+- Not done: dual-pane, gesture handling, bottom sheet nav
+
 ## Pending Phases
 
 ### (old) Phase 2.C scope

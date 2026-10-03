@@ -39,6 +39,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import com.ycngmn.nobook.R
+import com.ycngmn.nobook.ui.components.AdaptiveContainer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,15 +112,16 @@ fun SettingsDialog(
                 }
             }
         ) { paddingValues ->
-            SettingsContent(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .verticalScroll(scrollState)
-                    .padding(16.dp),
-                blockedAdCount = blockedAdCount,
-                onOpenWatchHistory = onOpenWatchHistory,
-                onOpenAccountManagement = onOpenAccountManagement
-            )
+            AdaptiveContainer(Modifier.padding(paddingValues)) {
+                SettingsContent(
+                    modifier = Modifier
+                        .verticalScroll(scrollState)
+                        .padding(16.dp),
+                    blockedAdCount = blockedAdCount,
+                    onOpenWatchHistory = onOpenWatchHistory,
+                    onOpenAccountManagement = onOpenAccountManagement
+                )
+            }
         }
 
     }

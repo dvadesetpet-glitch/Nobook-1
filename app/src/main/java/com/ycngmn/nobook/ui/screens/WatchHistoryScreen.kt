@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ycngmn.nobook.data.local.entity.WatchHistory
+import com.ycngmn.nobook.ui.components.AdaptiveContainer
 import com.ycngmn.nobook.ui.viewmodel.WatchHistoryViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -42,11 +43,8 @@ fun WatchHistoryScreen(
     val history by viewModel.history.collectAsState()
     val count by viewModel.count.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
+    AdaptiveContainer(Modifier.background(MaterialTheme.colorScheme.background)) {
+    Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text("Watch History ($count)") },
             navigationIcon = {
@@ -88,6 +86,7 @@ fun WatchHistoryScreen(
                 }
             }
         }
+    }
     }
 }
 

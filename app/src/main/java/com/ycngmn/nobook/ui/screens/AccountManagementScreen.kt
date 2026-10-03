@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ycngmn.nobook.data.local.entity.Account
+import com.ycngmn.nobook.ui.components.AdaptiveContainer
 import com.ycngmn.nobook.ui.components.AddAccountDialog
 import com.ycngmn.nobook.ui.viewmodel.AccountViewModel
 
@@ -63,12 +64,12 @@ fun AccountManagementScreen(
             }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
+        AdaptiveContainer(
+            Modifier
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
         ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             if (accounts.isEmpty()) {
                 Column(
                     modifier = Modifier
@@ -103,6 +104,7 @@ fun AccountManagementScreen(
                     }
                 }
             }
+        }
         }
     }
 
