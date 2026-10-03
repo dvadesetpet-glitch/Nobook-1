@@ -6,40 +6,67 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 
 const val SCRIPT_SRC = "https://raw.githubusercontent.com/ycngmn/Nobook/refs/heads/main/app/src/main/res/raw/"
 
+private const val FETCH_TIMEOUT_MS = 4_000L
+
 data class Script(
     val isEnabled: Boolean,
     @param:RawRes val resourceId:  Int,
-    val scriptTitle: String
+    val scriptTitle: String,
+    /** False for scripts that only exist in this fork: upstream has no such file (it would 404). */
+    val fetchRemote: Boolean = true
 )
 
+/**
+ * Builds the injected bundle. Upstream copies are fetched in parallel (each with a timeout) and
+ * the bundled resource is used when the fetch fails; fork-only scripts skip the network entirely.
+ * The splash screen waits for this, so the old one-request-after-another loop made every start
+ * as slow as the sum of all requests.
+ */
 suspend fun fetchScripts(
     scripts: List<Script>,
     fallbackContent: (Int) -> String
-): String {
-    val httpClient = HttpClient(OkHttp)
-    val scriptContent = buildString {
-        scripts.filter { it.isEnabled }.forEach { script ->
-            val content =
-                runCatching {
-                    val res = httpClient.get(SCRIPT_SRC + script.scriptTitle)
-                    if (res.status == HttpStatusCode.OK) {
-                        res.body() as String
-                    } else {
-                        throw Exception()
-                    }
-                }.getOrElse {
-                    fallbackContent(script.resourceId)
+): String = withContext(Dispatchers.IO) {
+    val enabled = scripts.filter { it.isEnabled }
+    val httpClient = if (enabled.any { it.fetchRemote }) HttpClient(OkHttp) else null
+    try {
+        val parts = coroutineScope {
+            enabled.map { script ->
+                async {
+                    val remote =
+                        if (httpClient != null && script.fetchRemote) fetchRemoteScript(httpClient, script)
+                        else null
+                    remote ?: fallbackContent(script.resourceId)
                 }
-            append(content)
-            append('\n')
+            }.awaitAll()
+        }
+        wrapBundle(minifyJavaScript(parts.joinToString("\n")))
+    } finally {
+        httpClient?.close()
+    }
+}
+
+private suspend fun fetchRemoteScript(client: HttpClient, script: Script): String? =
+    withTimeoutOrNull(FETCH_TIMEOUT_MS) {
+        try {
+            val res = client.get(SCRIPT_SRC + script.scriptTitle)
+            if (res.status == HttpStatusCode.OK) res.body<String>() else null
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
         }
     }
-    return wrapBundle(minifyJavaScript(scriptContent))
-}
 
 /**
  * Safe minification: strips comments and blank lines, trims indentation.
