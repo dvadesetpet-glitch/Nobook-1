@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Padding
 import androidx.compose.material.icons.filled.Try
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Manage
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DesktopWindows
 import androidx.compose.material.icons.outlined.FileDownload
@@ -60,7 +61,8 @@ import com.ycngmn.nobook.utils.rememberAutoDesktop
 fun SettingsContent(
     modifier: Modifier,
     viewModel: SettingsViewModel = viewModel(),
-    onOpenWatchHistory: (() -> Unit)? = null
+    onOpenWatchHistory: (() -> Unit)? = null,
+    onOpenAccountManagement: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     var isOpenDialog by rememberSaveable { mutableStateOf(false) }
@@ -116,6 +118,13 @@ fun SettingsContent(
                     supportingText = "View pages and videos you've watched",
                     isActive = null,
                     onClick = { onOpenWatchHistory?.invoke() },
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.Manage,
+                    title = "Accounts",
+                    supportingText = "Manage multiple Facebook accounts",
+                    isActive = null,
+                    onClick = { onOpenAccountManagement?.invoke() },
                 )
             )
         )

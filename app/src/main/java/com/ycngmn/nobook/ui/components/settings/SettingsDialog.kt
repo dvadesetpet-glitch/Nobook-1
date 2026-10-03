@@ -46,7 +46,8 @@ fun SettingsDialog(
     themeColor: Color,
     onDismiss: () -> Unit,
     onReload: () -> Unit,
-    onOpenWatchHistory: (() -> Unit)? = null
+    onOpenWatchHistory: (() -> Unit)? = null,
+    onOpenAccountManagement: (() -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
 
@@ -114,7 +115,8 @@ fun SettingsDialog(
                     .padding(paddingValues)
                     .verticalScroll(scrollState)
                     .padding(16.dp),
-                onOpenWatchHistory = onOpenWatchHistory
+                onOpenWatchHistory = onOpenWatchHistory,
+                onOpenAccountManagement = onOpenAccountManagement
             )
         }
 

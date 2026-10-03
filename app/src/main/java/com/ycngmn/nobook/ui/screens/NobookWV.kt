@@ -38,6 +38,7 @@ import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.ycngmn.nobook.R
 import com.ycngmn.nobook.ui.components.NetworkErrorDialog
 import com.ycngmn.nobook.ui.components.settings.SettingsDialog
+import com.ycngmn.nobook.ui.viewmodel.AccountViewModel
 import com.ycngmn.nobook.ui.viewmodel.MainViewModel
 import com.ycngmn.nobook.ui.viewmodel.SettingsViewModel
 import com.ycngmn.nobook.ui.viewmodel.WatchHistoryViewModel
@@ -141,6 +142,7 @@ fun NobookWebView(
     }
 
     val watchHistoryVM: WatchHistoryViewModel = viewModel(factory = WatchHistoryViewModel.Factory(context))
+    val accountVM: AccountViewModel = viewModel(factory = AccountViewModel.Factory(context))
 
     val themeColor by viewModel.themeColor
     // Manual handling to fix visual & padding bug on settings dialog.
@@ -187,8 +189,18 @@ fun NobookWebView(
 
     var settingsToggle by rememberSaveable { mutableStateOf(false) }
     var showWatchHistory by rememberSaveable { mutableStateOf(false) }
+    var showAccountManagement by rememberSaveable { mutableStateOf(false) }
 
-    if (showWatchHistory) {
+    if (showAccountManagement) {
+        AccountManagementScreen(
+            onBackClick = { showAccountManagement = false },
+            onAccountSwitch = { accountId ->
+                accountVM.refreshActiveAccount()
+                navigator.reload()
+            },
+            viewModel = accountVM
+        )
+    } else if (showWatchHistory) {
         WatchHistoryScreen(
             onBackClick = { showWatchHistory = false },
             onItemClick = { url ->
@@ -218,6 +230,10 @@ fun NobookWebView(
             onOpenWatchHistory = {
                 settingsToggle = false
                 showWatchHistory = true
+            },
+            onOpenAccountManagement = {
+                settingsToggle = false
+                showAccountManagement = true
             }
         )
     }
