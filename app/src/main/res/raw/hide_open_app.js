@@ -7,11 +7,12 @@
     const xpath = '//*[' + labels.map((l) => "normalize-space(text())=\"" + l + "\"").join(' or ') + ']';
 
     const hide = (leaf) => {
-        // Climb to the outermost ancestor that still contains only that label.
+        // Climb while the parent is still button-sized. A text match alone is not enough: the
+        // logo is an icon glyph, so the parent's text differs and the blue box would stay.
         let target = leaf;
-        const text = leaf.textContent.trim();
-        for (let i = 0; i < 4 && target.parentElement; i++) {
-            if (target.parentElement.textContent.trim() !== text) break;
+        for (let i = 0; i < 6 && target.parentElement && target.parentElement !== document.body; i++) {
+            const r = target.parentElement.getBoundingClientRect();
+            if (r.width > 180 || r.height > 60) break;
             target = target.parentElement;
         }
         target.style.setProperty('display', 'none', 'important');
@@ -21,7 +22,8 @@
         const result = document.evaluate(xpath, document.body, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
         for (let i = 0; i < result.snapshotLength; i++) {
             const el = result.snapshotItem(i);
-            if (el.style.display !== 'none') hide(el);
+            // Already hidden (by us or an ancestor): its rect is zero and would make the climb run away.
+            if (el.getClientRects().length > 0) hide(el);
         }
     };
 
