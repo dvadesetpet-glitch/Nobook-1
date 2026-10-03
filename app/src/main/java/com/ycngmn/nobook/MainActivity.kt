@@ -1,6 +1,8 @@
 package com.ycngmn.nobook
 
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
+import android.webkit.WebView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,6 +15,11 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        // Lets chrome://inspect attach to the WebView. Debug builds only (release is not debuggable).
+        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
 
         setContent {
             val intentUrl = intent?.data?.toString()
