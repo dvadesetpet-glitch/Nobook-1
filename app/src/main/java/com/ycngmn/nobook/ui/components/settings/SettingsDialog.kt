@@ -45,7 +45,8 @@ import com.ycngmn.nobook.R
 fun SettingsDialog(
     themeColor: Color,
     onDismiss: () -> Unit,
-    onReload: () -> Unit
+    onReload: () -> Unit,
+    onOpenWatchHistory: (() -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
 
@@ -112,7 +113,8 @@ fun SettingsDialog(
                 modifier = Modifier
                     .padding(paddingValues)
                     .verticalScroll(scrollState)
-                    .padding(16.dp)
+                    .padding(16.dp),
+                onOpenWatchHistory = onOpenWatchHistory
             )
         }
 

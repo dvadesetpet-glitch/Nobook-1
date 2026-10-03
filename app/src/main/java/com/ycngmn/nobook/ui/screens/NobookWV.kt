@@ -40,6 +40,7 @@ import com.ycngmn.nobook.ui.components.NetworkErrorDialog
 import com.ycngmn.nobook.ui.components.settings.SettingsDialog
 import com.ycngmn.nobook.ui.viewmodel.MainViewModel
 import com.ycngmn.nobook.ui.viewmodel.SettingsViewModel
+import com.ycngmn.nobook.ui.viewmodel.WatchHistoryViewModel
 import com.ycngmn.nobook.utils.DESKTOP_USER_AGENT
 import com.ycngmn.nobook.utils.ExternalRequestInterceptor
 import com.ycngmn.nobook.utils.fileChooserWebViewParams
@@ -47,6 +48,7 @@ import com.ycngmn.nobook.utils.jsBridge.ClipboardBridge
 import com.ycngmn.nobook.utils.jsBridge.DownloadBridge
 import com.ycngmn.nobook.utils.jsBridge.NobookSettings
 import com.ycngmn.nobook.utils.jsBridge.ThemeChange
+import com.ycngmn.nobook.utils.jsBridge.WatchHistoryBridge
 import com.ycngmn.nobook.utils.rememberAutoDesktop
 import com.ycngmn.nobook.utils.rememberImeHeight
 import kotlinx.coroutines.delay
@@ -138,6 +140,8 @@ fun NobookWebView(
         )
     }
 
+    val watchHistoryVM: WatchHistoryViewModel = viewModel(factory = WatchHistoryViewModel.Factory(context))
+
     val themeColor by viewModel.themeColor
     // Manual handling to fix visual & padding bug on settings dialog.
     var isImmersiveMode by rememberSaveable { mutableStateOf(settingsVM.immersiveMode.value) }
@@ -182,7 +186,18 @@ fun NobookWebView(
     }
 
     var settingsToggle by rememberSaveable { mutableStateOf(false) }
-    if (settingsToggle) {
+    var showWatchHistory by rememberSaveable { mutableStateOf(false) }
+
+    if (showWatchHistory) {
+        WatchHistoryScreen(
+            onBackClick = { showWatchHistory = false },
+            onItemClick = { url ->
+                showWatchHistory = false
+                navigator.loadUrl(url)
+            },
+            viewModel = watchHistoryVM
+        )
+    } else if (settingsToggle) {
         setWindow(false)
         SettingsDialog(
             themeColor = themeColor,
@@ -199,6 +214,10 @@ fun NobookWebView(
                     settings = settingsVM
                 )
                 navigator.reload()
+            },
+            onOpenWatchHistory = {
+                settingsToggle = false
+                showWatchHistory = true
             }
         )
     }
@@ -295,6 +314,10 @@ fun NobookWebView(
                 addJavascriptInterface(
                     ClipboardBridge(context),
                     "ClipboardBridge"
+                )
+                addJavascriptInterface(
+                    WatchHistoryBridge(watchHistoryVM),
+                    "WatchHistoryBridge"
                 )
 
                 setLayerType(View.LAYER_TYPE_HARDWARE, null)

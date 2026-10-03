@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.EmojiPeople
 import androidx.compose.material.icons.filled.Padding
 import androidx.compose.material.icons.filled.Try
 import androidx.compose.material.icons.outlined.Circle
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DesktopWindows
 import androidx.compose.material.icons.outlined.FileDownload
@@ -58,7 +59,8 @@ import com.ycngmn.nobook.utils.rememberAutoDesktop
 @Composable
 fun SettingsContent(
     modifier: Modifier,
-    viewModel: SettingsViewModel = viewModel()
+    viewModel: SettingsViewModel = viewModel(),
+    onOpenWatchHistory: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     var isOpenDialog by rememberSaveable { mutableStateOf(false) }
@@ -107,6 +109,13 @@ fun SettingsContent(
                     supportingText = stringResource(R.string.customize_feed),
                     isActive = null,
                     onClick = { isOpenDialog = true },
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.History,
+                    title = "Watch History",
+                    supportingText = "View pages and videos you've watched",
+                    isActive = null,
+                    onClick = { onOpenWatchHistory?.invoke() },
                 )
             )
         )
