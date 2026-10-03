@@ -33,7 +33,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.multiplatform.webview.web.LoadingState
 import com.multiplatform.webview.web.WebView
-import com.multiplatform.webview.web.rememberSaveableWebViewState
+import com.multiplatform.webview.web.rememberWebViewState
 import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.ycngmn.nobook.R
 import com.ycngmn.nobook.ui.components.NetworkErrorDialog
@@ -64,7 +64,9 @@ fun NobookWebView(
     val activity = LocalActivity.current
     val resources = LocalResources.current
 
-    val state = rememberSaveableWebViewState(url)
+    // Not rememberSaveableWebViewState: it puts the whole WebView back-stack (~770 KB) into the
+    // saved instance state and crashes with TransactionTooLargeException when the app is stopped.
+    val state = rememberWebViewState(url)
     val navigator = rememberWebViewNavigator(
         requestInterceptor = ExternalRequestInterceptor { externalUrl ->
             val intent = Intent(Intent.ACTION_VIEW, externalUrl.toUri())
