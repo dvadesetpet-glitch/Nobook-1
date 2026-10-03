@@ -40,10 +40,10 @@
         const bar = document.createElement('div');
         bar.id = BAR_ID;
         bar.setAttribute('style', [
-            'position:fixed', 'left:8px', 'right:8px', 'bottom:64px',
+            'position:fixed', 'left:0', 'right:0', 'bottom:0',
             'z-index:2147483647', 'display:none', 'align-items:center', 'gap:8px',
-            'padding:6px 10px', 'border-radius:20px',
-            'background:rgba(0,0,0,0.55)', 'color:#fff',
+            'padding:4px 10px', 'border-radius:0',
+            'background:rgba(0,0,0,0.6)', 'color:#fff',
             'font:12px sans-serif', 'touch-action:none'
         ].join(';'));
 
