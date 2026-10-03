@@ -36,4 +36,12 @@ class MinifyJavaScriptTest {
         val src = """r = /https?:\/\/[^'"]+/g; s = a / b;"""
         assertEquals(src, minifyJavaScript(src))
     }
+
+    @Test
+    fun wrapBundleRunsOncePerDocumentInsideItsOwnScope() {
+        val out = wrapBundle("const observer = 1;")
+        assertTrue(out.startsWith("if (!window.__nobookBundle) {"))
+        assertTrue(out.contains("window.__nobookBundle = true;"))
+        assertTrue(out.contains("(function() {\nconst observer = 1;\n})();"))
+    }
 }

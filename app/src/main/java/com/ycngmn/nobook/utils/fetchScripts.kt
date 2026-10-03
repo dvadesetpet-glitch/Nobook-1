@@ -35,9 +35,10 @@ suspend fun fetchScripts(
                     fallbackContent(script.resourceId)
                 }
             append(content)
+            append('\n')
         }
     }
-    return minifyJavaScript(scriptContent)
+    return wrapBundle(minifyJavaScript(scriptContent))
 }
 
 /**
@@ -109,3 +110,12 @@ internal fun minifyJavaScript(js: String): String {
         .filter { it.isNotEmpty() }
         .joinToString("\n")
 }
+
+/**
+ * Runs the whole bundle once per document, inside its own function scope.
+ * The page fires "finished loading" several times per document and the bundle is evaluated each
+ * time; scripts.js declares a top-level `const observer`, so the second evaluation threw
+ * "Identifier 'observer' has already been declared" and the rest of the bundle was skipped.
+ */
+internal fun wrapBundle(js: String): String =
+    "if (!window.__nobookBundle) {\nwindow.__nobookBundle = true;\n(function() {\n$js\n})();\n}"
