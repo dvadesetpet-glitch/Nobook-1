@@ -30,9 +30,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.overflow.TextOverflow
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ycngmn.nobook.data.local.entity.Account
 import com.ycngmn.nobook.ui.components.AddAccountDialog
 import com.ycngmn.nobook.ui.viewmodel.AccountViewModel
@@ -42,7 +41,7 @@ import com.ycngmn.nobook.ui.viewmodel.AccountViewModel
 fun AccountManagementScreen(
     onBackClick: () -> Unit,
     onAccountSwitch: (Long) -> Unit,
-    viewModel: AccountViewModel = viewModel(factory = { error("Factory not provided") })
+    viewModel: AccountViewModel
 ) {
     val accounts by viewModel.accounts.collectAsState()
     var showAddDialog by rememberSaveable { mutableStateOf(false) }

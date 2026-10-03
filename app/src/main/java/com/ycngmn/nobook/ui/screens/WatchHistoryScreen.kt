@@ -24,9 +24,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.overflow.TextOverflow
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ycngmn.nobook.data.local.entity.WatchHistory
 import com.ycngmn.nobook.ui.viewmodel.WatchHistoryViewModel
 import java.text.SimpleDateFormat
@@ -38,7 +37,7 @@ import java.util.Locale
 fun WatchHistoryScreen(
     onBackClick: () -> Unit,
     onItemClick: (String) -> Unit,
-    viewModel: WatchHistoryViewModel = viewModel(factory = { error("Factory not provided") })
+    viewModel: WatchHistoryViewModel
 ) {
     val history by viewModel.history.collectAsState()
     val count by viewModel.count.collectAsState()
