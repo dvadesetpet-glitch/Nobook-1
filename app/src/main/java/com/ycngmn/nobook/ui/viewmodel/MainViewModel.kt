@@ -46,6 +46,7 @@ class MainViewModel(
         settings: SettingsViewModel
     ) {
         val scripts = listOf(
+            Script(true, R.raw.perf_shim, "perf_shim.js"), // must run before observers are created
             Script(true, R.raw.scripts, "scripts.js"), // always apply
             Script(settings.removeAds.value, R.raw.adblock, "adblock.js"),
             Script(settings.removeAds.value, R.raw.adblock_enhanced, "adblock_enhanced.js"),

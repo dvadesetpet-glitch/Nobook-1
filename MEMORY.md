@@ -89,6 +89,11 @@
 - `rememberAutoDesktop` now keyed on orientation + smallestScreenWidthDp (was stale after rotation)
 - Not done: dual-pane, gesture handling, bottom sheet nav
 
+## Phase 1 Optimizations (done, scoped)
+- `res/raw/perf_shim.js` (runs first): wraps window.MutationObserver, one callback per rAF for all scripts (1.3); `content-visibility:auto` on feed articles (1.4, no DOM pruning, React-safe)
+- Settings 'Memory usage' item shows app JVM heap (1.6); not WebView/native memory
+- Scripts get minified: use semicolons, no `//` inside strings
+
 ## Pending Phases
 
 ### (old) Phase 2.C scope

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.DesktopWindows
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.PanoramaWideAngle
+import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.Pinch
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.Icon
@@ -160,6 +161,18 @@ fun SettingsContent(
                     supportingText = stringResource(R.string.keep_the_navigation_bar_visible_while_scrolling),
                     isActive = stickyNavbar.value,
                     onClick = { viewModel.setStickyNavbar(!stickyNavbar.value) }
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.Memory,
+                    title = "Memory usage",
+                    supportingText = run {
+                        val rt = Runtime.getRuntime()
+                        val usedMb = (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024)
+                        val maxMb = rt.maxMemory() / (1024 * 1024)
+                        "App heap: $usedMb MB of $maxMb MB"
+                    },
+                    isActive = null,
+                    onClick = {}
                 ),
                 SettingsItem(
                     icon = Icons.Outlined.Circle,
