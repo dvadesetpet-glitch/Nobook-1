@@ -21,3 +21,16 @@
 #-renamesourcefileattribute SourceFile
 
 -dontwarn org.slf4j.impl.StaticLoggerBinder
+
+# JS bridges: WebView calls these by name through reflection.
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+-keep class com.ycngmn.nobook.utils.jsBridge.** { *; }
+
+# Room entities and database (reflection / generated code)
+-keep class com.ycngmn.nobook.data.local.** { *; }
+
+# Readable crash traces
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

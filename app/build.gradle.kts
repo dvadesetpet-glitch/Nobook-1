@@ -28,8 +28,23 @@ extensions.configure<ApplicationExtension> {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Release signing comes from environment variables (set from GitHub Secrets in CI).
+    // Without them the release APK is built unsigned and cannot be installed.
+    val keystorePath = System.getenv("NOBOOK_KEYSTORE_FILE")
+    if (keystorePath != null) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("NOBOOK_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("NOBOOK_KEY_ALIAS")
+                keyPassword = System.getenv("NOBOOK_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

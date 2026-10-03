@@ -73,3 +73,5 @@ jobs:
         with:
           name: app-debug.apk
           path: app/build/outputs/apk/debug/app-debug.apk
+      - name: Check release build (R8 minify, unsigned)
+        run: ./gradlew assembleRelease --console=plain
