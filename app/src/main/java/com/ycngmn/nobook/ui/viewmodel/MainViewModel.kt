@@ -51,6 +51,8 @@ class MainViewModel(
             Script(settings.removeAds.value, R.raw.adblock, "adblock.js"),
             Script(settings.removeAds.value, R.raw.adblock_enhanced, "adblock_enhanced.js"),
             Script(settings.removeAds.value, R.raw.hide_adblock_toast, "hide_adblock_toast.js"),
+            Script(settings.removeAds.value, R.raw.adblock_feed_fix, "adblock_feed_fix.js"),
+            Script(true, R.raw.fix_media_source, "fix_media_source.js"),
             Script(settings.enableDownloadContent.value, R.raw.download_content, "download_content.js"),
             Script(settings.enableCopyToClipboard.value, R.raw.copy_to_clipboard, "copy_to_clipboard.js"),
             Script(settings.stickyNavbar.value, R.raw.sticky_navbar, "sticky_navbar.js"),
