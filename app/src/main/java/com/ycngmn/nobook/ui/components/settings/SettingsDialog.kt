@@ -44,6 +44,7 @@ import com.ycngmn.nobook.R
 @Composable
 fun SettingsDialog(
     themeColor: Color,
+    blockedAdCount: Int = 0,
     onDismiss: () -> Unit,
     onReload: () -> Unit,
     onOpenWatchHistory: (() -> Unit)? = null,
@@ -115,6 +116,7 @@ fun SettingsDialog(
                     .padding(paddingValues)
                     .verticalScroll(scrollState)
                     .padding(16.dp),
+                blockedAdCount = blockedAdCount,
                 onOpenWatchHistory = onOpenWatchHistory,
                 onOpenAccountManagement = onOpenAccountManagement
             )

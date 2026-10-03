@@ -23,6 +23,13 @@ class MainViewModel(
     private val _scripts = mutableStateOf<String?>(null)
     val scripts: State<String?> = _scripts
 
+    private val _blockedAdCount = mutableStateOf(0)
+    val blockedAdCount: State<Int> = _blockedAdCount
+
+    fun setBlockedAdCount(count: Int) {
+        _blockedAdCount.value = count
+    }
+
     init {
         loadScripts(
             resources,
@@ -41,6 +48,7 @@ class MainViewModel(
         val scripts = listOf(
             Script(true, R.raw.scripts, "scripts.js"), // always apply
             Script(settings.removeAds.value, R.raw.adblock, "adblock.js"),
+            Script(settings.removeAds.value, R.raw.adblock_enhanced, "adblock_enhanced.js"),
             Script(settings.enableDownloadContent.value, R.raw.download_content, "download_content.js"),
             Script(settings.enableCopyToClipboard.value, R.raw.copy_to_clipboard, "copy_to_clipboard.js"),
             Script(settings.stickyNavbar.value, R.raw.sticky_navbar, "sticky_navbar.js"),

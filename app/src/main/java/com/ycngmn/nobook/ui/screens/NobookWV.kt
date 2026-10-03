@@ -45,6 +45,7 @@ import com.ycngmn.nobook.ui.viewmodel.WatchHistoryViewModel
 import com.ycngmn.nobook.utils.DESKTOP_USER_AGENT
 import com.ycngmn.nobook.utils.ExternalRequestInterceptor
 import com.ycngmn.nobook.utils.fileChooserWebViewParams
+import com.ycngmn.nobook.utils.jsBridge.AdFilteringBridge
 import com.ycngmn.nobook.utils.jsBridge.ClipboardBridge
 import com.ycngmn.nobook.utils.jsBridge.DownloadBridge
 import com.ycngmn.nobook.utils.jsBridge.NobookSettings
@@ -213,6 +214,7 @@ fun NobookWebView(
         setWindow(false)
         SettingsDialog(
             themeColor = themeColor,
+            blockedAdCount = viewModel.blockedAdCount.value,
             onDismiss = {
                 setWindow(settingsVM.immersiveMode.value)
                 settingsToggle = false
@@ -334,6 +336,10 @@ fun NobookWebView(
                 addJavascriptInterface(
                     WatchHistoryBridge(watchHistoryVM),
                     "WatchHistoryBridge"
+                )
+                addJavascriptInterface(
+                    AdFilteringBridge { viewModel.setBlockedAdCount(it) },
+                    "AdFilteringBridge"
                 )
 
                 setLayerType(View.LAYER_TYPE_HARDWARE, null)

@@ -21,7 +21,7 @@ import androidx.compose.material.icons.filled.Padding
 import androidx.compose.material.icons.filled.Try
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Manage
+import androidx.compose.material.icons.outlined.ManageAccounts
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DesktopWindows
 import androidx.compose.material.icons.outlined.FileDownload
@@ -61,6 +61,7 @@ import com.ycngmn.nobook.utils.rememberAutoDesktop
 fun SettingsContent(
     modifier: Modifier,
     viewModel: SettingsViewModel = viewModel(),
+    blockedAdCount: Int = 0,
     onOpenWatchHistory: (() -> Unit)? = null,
     onOpenAccountManagement: (() -> Unit)? = null
 ) {
@@ -87,7 +88,8 @@ fun SettingsContent(
                 SettingsItem(
                     icon = Icons.Outlined.Shield,
                     title = stringResource(R.string.remove_ads_title),
-                    supportingText = stringResource(R.string.hide_sponsored_ads_from_your_feed),
+                    supportingText = stringResource(R.string.hide_sponsored_ads_from_your_feed) +
+                        if (blockedAdCount > 0) " ($blockedAdCount blocked)" else "",
                     isActive = removeAds.value,
                     onClick = { viewModel.setRemoveAds(!removeAds.value) },
                 ),
@@ -120,7 +122,7 @@ fun SettingsContent(
                     onClick = { onOpenWatchHistory?.invoke() },
                 ),
                 SettingsItem(
-                    icon = Icons.Outlined.Manage,
+                    icon = Icons.Outlined.ManageAccounts,
                     title = "Accounts",
                     supportingText = "Manage multiple Facebook accounts",
                     isActive = null,

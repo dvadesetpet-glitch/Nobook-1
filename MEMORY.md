@@ -79,9 +79,14 @@
 
 ---
 
+## Phase 2.C - Enhanced Ad Filtering (done)
+- New `res/raw/adblock_enhanced.js`: structural selectors by category, rAF-debounced MutationObserver
+- `AdFilteringBridge.reportBlocked(total)` -> MainViewModel.blockedAdCount -> shown in Settings Remove Ads item
+- Separate file because remote SCRIPT_SRC (upstream ycngmn/Nobook) overrides local adblock.js when online
+
 ## Pending Phases
 
-### Phase 2.C - Enhanced Ad Filtering
+### (old) Phase 2.C scope
 **Scope:**
 - Extend current adblock.js with regex improvements
 - Add category-based filtering (sponsored, suggested, reels, groups)
