@@ -46,16 +46,16 @@ class MainViewModel(
         settings: SettingsViewModel
     ) {
         val scripts = listOf(
-            Script(true, R.raw.perf_shim, "perf_shim.js"), // must run before observers are created
+            Script(true, R.raw.perf_shim, "perf_shim.js", fetchRemote = false), // must run before observers are created
             Script(true, R.raw.scripts, "scripts.js"), // always apply
             Script(settings.removeAds.value, R.raw.adblock, "adblock.js"),
-            Script(settings.removeAds.value, R.raw.adblock_enhanced, "adblock_enhanced.js"),
-            Script(settings.removeAds.value, R.raw.hide_adblock_toast, "hide_adblock_toast.js"),
-            Script(settings.removeAds.value, R.raw.adblock_feed_fix, "adblock_feed_fix.js"),
-            Script(true, R.raw.fix_media_source, "fix_media_source.js"),
-            Script(true, R.raw.hide_open_app, "hide_open_app.js"),
-            Script(true, R.raw.haptic_feedback, "haptic_feedback.js"),
-            Script(true, R.raw.remove_all, "remove_all.js"),
+            Script(settings.removeAds.value, R.raw.adblock_enhanced, "adblock_enhanced.js", fetchRemote = false),
+            Script(settings.removeAds.value, R.raw.hide_adblock_toast, "hide_adblock_toast.js", fetchRemote = false),
+            Script(settings.removeAds.value, R.raw.adblock_feed_fix, "adblock_feed_fix.js", fetchRemote = false),
+            Script(true, R.raw.fix_media_source, "fix_media_source.js", fetchRemote = false),
+            Script(true, R.raw.hide_open_app, "hide_open_app.js", fetchRemote = false),
+            Script(true, R.raw.haptic_feedback, "haptic_feedback.js", fetchRemote = false),
+            Script(true, R.raw.remove_all, "remove_all.js", fetchRemote = false),
             Script(settings.enableDownloadContent.value, R.raw.download_content, "download_content.js"),
             Script(settings.enableCopyToClipboard.value, R.raw.copy_to_clipboard, "copy_to_clipboard.js"),
             Script(settings.stickyNavbar.value, R.raw.sticky_navbar, "sticky_navbar.js"),
@@ -63,8 +63,8 @@ class MainViewModel(
             Script(settings.amoledBlack.value, R.raw.amoled_black, "amoled_black.js"),
             Script(settings.hideSuggested.value, R.raw.hide_suggested, "hide_suggested.js"),
             Script(settings.hideReels.value, R.raw.hide_reels, "hide_reels.js"),
-            Script(true, R.raw.watch_history, "watch_history.js"),
-            Script(!settings.hideReels.value, R.raw.reel_controls, "reel_controls.js"),
+            Script(true, R.raw.watch_history, "watch_history.js", fetchRemote = false),
+            Script(!settings.hideReels.value, R.raw.reel_controls, "reel_controls.js", fetchRemote = false),
             Script(settings.hideStories.value, R.raw.hide_stories, "hide_stories.js"),
             Script(settings.hidePeopleYouMayKnow.value, R.raw.hide_pymk, "hide_pymk.js"),
             Script(settings.hideGroups.value, R.raw.hide_groups, "hide_groups.js")

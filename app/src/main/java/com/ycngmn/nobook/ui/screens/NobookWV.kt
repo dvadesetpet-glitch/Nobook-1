@@ -220,14 +220,13 @@ fun NobookWebView(
     val barsInsets = WindowInsets.systemBars.asPaddingValues()
     val imeHeight = rememberImeHeight()
 
-    // Memory leak prevention: cleanup WebView on composable destroy
+    // Memory leak prevention: release the WebView when the composable is destroyed.
+    // The cache is deliberately kept (clearCache(true) here wiped it on every close and made the
+    // next start download everything again); history/form data die with destroy() anyway.
     DisposableEffect(Unit) {
         onDispose {
             state.nativeWebView?.let { webView ->
                 webView.stopLoading()
-                webView.clearCache(true)
-                webView.clearHistory()
-                webView.clearFormData()
                 webView.removeAllViews()
                 webView.destroy()
             }

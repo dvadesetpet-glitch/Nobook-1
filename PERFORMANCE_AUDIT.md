@@ -362,3 +362,15 @@ app/build.gradle.kts                 # Add minification task
 **Estimated Effort**: 12-14 developer days  
 **Expected Outcome**: 50% performance improvement (freez
 ing → smooth)
+
+---
+
+## Measured update (2026-10-03)
+
+Sizes were re-measured on `main` after the Phase 1 work; some figures above were estimates and were too high.
+
+- Total bundled JS in `res/raw/*.js` is about **80 KB raw** (not 300-500 KB). `scripts.js`, `download_content.js`, `copy_to_clipboard.js` and `adblock.js` are each 10-12 KB.
+- The splash screen waits for the script bundle, and the bundle used to be built by fetching every enabled script from upstream **one request after another**; ten of the bundled scripts do not exist upstream, so each cost a wasted 404. Now: upstream copies are fetched in parallel with a 4 s timeout, and fork-only scripts skip the network (`Script.fetchRemote = false`).
+- `clearCache(true)` in the WebView dispose handler wiped the disk cache on every close, undoing the cache setting from 1.1. It was removed.
+- `perf_shim.js` batching of `MutationObserver` callbacks (1.3/1.4) is in place and covers every script, including the newer ones.
+- Not measured on a device: page load time, memory over a long session. The percentages quoted earlier in this document were never measured.

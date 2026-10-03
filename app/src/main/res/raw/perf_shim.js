@@ -11,7 +11,8 @@
             let scheduled = false;
             let self = null;
             super((records, observer) => {
-                pending.push(...records);
+                // Loop instead of push(...records): a huge batch would overflow the argument limit.
+                for (let i = 0; i < records.length; i++) pending.push(records[i]);
                 if (scheduled) return;
                 scheduled = true;
                 requestAnimationFrame(() => {
