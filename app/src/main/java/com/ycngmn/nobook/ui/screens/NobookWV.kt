@@ -87,6 +87,10 @@ fun NobookWebView(
         }
     }
 
+    var settingsToggle by rememberSaveable { mutableStateOf(false) }
+    var showWatchHistory by rememberSaveable { mutableStateOf(false) }
+    var showAccountManagement by rememberSaveable { mutableStateOf(false) }
+
     // allow exiting while scrolling to top.
     var exitScroll by remember { mutableStateOf(false) }
     BackHandler {
@@ -108,6 +112,12 @@ fun NobookWebView(
                 }
             }
         }
+    }
+
+    // Overlay screens must close on back instead of navigating the page / exiting the app.
+    BackHandler(enabled = showWatchHistory || showAccountManagement) {
+        showWatchHistory = false
+        showAccountManagement = false
     }
 
     LaunchedEffect(exitScroll) {
@@ -186,58 +196,6 @@ fun NobookWebView(
     if (isError && isLoading) {
         NetworkErrorDialog { activity?.finish() }
         return
-    }
-
-    var settingsToggle by rememberSaveable { mutableStateOf(false) }
-    var showWatchHistory by rememberSaveable { mutableStateOf(false) }
-    var showAccountManagement by rememberSaveable { mutableStateOf(false) }
-
-    if (showAccountManagement) {
-        AccountManagementScreen(
-            onBackClick = { showAccountManagement = false },
-            onAccountSwitch = { accountId ->
-                accountVM.refreshActiveAccount()
-                navigator.reload()
-            },
-            viewModel = accountVM
-        )
-    } else if (showWatchHistory) {
-        WatchHistoryScreen(
-            onBackClick = { showWatchHistory = false },
-            onItemClick = { url ->
-                showWatchHistory = false
-                navigator.loadUrl(url)
-            },
-            viewModel = watchHistoryVM
-        )
-    } else if (settingsToggle) {
-        setWindow(false)
-        SettingsDialog(
-            themeColor = themeColor,
-            blockedAdCount = viewModel.blockedAdCount.value,
-            onDismiss = {
-                setWindow(settingsVM.immersiveMode.value)
-                settingsToggle = false
-            },
-            onReload = {
-                isLoading = true
-                viewModel.setThemeColor(Color.Transparent)
-                setWindow(settingsVM.immersiveMode.value)
-                viewModel.refresh(
-                    resources = resources,
-                    settings = settingsVM
-                )
-                navigator.reload()
-            },
-            onOpenWatchHistory = {
-                settingsToggle = false
-                showWatchHistory = true
-            },
-            onOpenAccountManagement = {
-                settingsToggle = false
-                showAccountManagement = true
-            }
-        )
     }
 
     if (isLoading) {
@@ -354,4 +312,54 @@ fun NobookWebView(
             }
         }
     )
+
+    if (showAccountManagement) {
+        AccountManagementScreen(
+            onBackClick = { showAccountManagement = false },
+            onAccountSwitch = { accountId ->
+                accountVM.refreshActiveAccount()
+                navigator.reload()
+            },
+            viewModel = accountVM
+        )
+    } else if (showWatchHistory) {
+        WatchHistoryScreen(
+            onBackClick = { showWatchHistory = false },
+            onItemClick = { url ->
+                showWatchHistory = false
+                navigator.loadUrl(url)
+            },
+            viewModel = watchHistoryVM
+        )
+    }
+
+    if (settingsToggle) {
+        setWindow(false)
+        SettingsDialog(
+            themeColor = themeColor,
+            blockedAdCount = viewModel.blockedAdCount.value,
+            onDismiss = {
+                setWindow(settingsVM.immersiveMode.value)
+                settingsToggle = false
+            },
+            onReload = {
+                isLoading = true
+                viewModel.setThemeColor(Color.Transparent)
+                setWindow(settingsVM.immersiveMode.value)
+                viewModel.refresh(
+                    resources = resources,
+                    settings = settingsVM
+                )
+                navigator.reload()
+            },
+            onOpenWatchHistory = {
+                settingsToggle = false
+                showWatchHistory = true
+            },
+            onOpenAccountManagement = {
+                settingsToggle = false
+                showAccountManagement = true
+            }
+        )
+    }
 }
