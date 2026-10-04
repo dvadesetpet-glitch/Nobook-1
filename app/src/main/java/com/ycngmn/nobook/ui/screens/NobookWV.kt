@@ -129,6 +129,14 @@ fun NobookWebView(
         if (firstUrl) firstUrl = false else navigator.loadUrl(url)
     }
 
+    // Leaving Messenger always goes straight to the feed. History-back was unreliable there: the
+    // previous entry could be another Messenger page, which put the user back in the chat.
+    // loadUrl() does not pass through the request interceptor, so the mobile user agent is set first.
+    fun leaveMessenger() {
+        applyUserAgent(HOME_URL)
+        navigator.loadUrl(HOME_URL)
+    }
+
     var settingsToggle by rememberSaveable { mutableStateOf(false) }
     var showWatchHistory by rememberSaveable { mutableStateOf(false) }
     var showAccountManagement by rememberSaveable { mutableStateOf(false) }
@@ -138,7 +146,7 @@ fun NobookWebView(
     BackHandler {
         if (MessengerLinks.needsDesktopSite(state.lastLoadedUrl)) {
             // Messenger's own page swallows back presses (open menus/dialogs): leave it directly.
-            if (navigator.canGoBack) navigator.navigateBack() else navigator.loadUrl(HOME_URL)
+            leaveMessenger()
         } else if (exitScroll) {
             activity?.finish()
         } else {
@@ -379,9 +387,7 @@ fun NobookWebView(
     if (MessengerLinks.needsDesktopSite(state.lastLoadedUrl)) {
         Box(Modifier.fillMaxSize()) {
             IconButton(
-                onClick = {
-                    if (navigator.canGoBack) navigator.navigateBack() else navigator.loadUrl(HOME_URL)
-                },
+                onClick = { leaveMessenger() },
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(top = barsInsets.calculateTopPadding() + 8.dp, start = 8.dp)
