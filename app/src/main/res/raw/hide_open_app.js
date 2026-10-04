@@ -3,7 +3,11 @@
     if (window._nbHideOpenApp) return;
     window._nbHideOpenApp = true;
 
-    const labels = ['Open app', 'Open App', 'Otvori aplikaciju', 'Otvori app', 'App öffnen', 'Abrir app', 'Ouvrir l\u2019application'];
+    const labels = [
+        'Open app', 'Open App', 'Open in app', 'Open in App', 'Get app', 'Get the app', 'Install app', 'Use the app',
+        'Otvori aplikaciju', 'Otvori app', 'Otvori u aplikaciji', 'Preuzmi aplikaciju', 'Instaliraj aplikaciju', 'Koristi aplikaciju',
+        'App öffnen', 'Abrir app', 'Ouvrir l\u2019application'
+    ];
     const xpath = '//*[' + labels.map((l) => "normalize-space(text())=\"" + l + "\"").join(' or ') + ']';
 
     const hide = (leaf) => {
