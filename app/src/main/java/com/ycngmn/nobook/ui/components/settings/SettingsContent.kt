@@ -1,6 +1,9 @@
 package com.ycngmn.nobook.ui.components.settings
 
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +24,7 @@ import androidx.compose.material.icons.filled.Padding
 import androidx.compose.material.icons.filled.Try
 import androidx.compose.material.icons.outlined.Circle
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.ManageAccounts
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DesktopWindows
@@ -128,6 +132,21 @@ fun SettingsContent(
                     supportingText = "Manage multiple Facebook accounts",
                     isActive = null,
                     onClick = { onOpenAccountManagement?.invoke() },
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.Link,
+                    title = "Open Facebook links in Nobook",
+                    supportingText = "Opens Android's \"Open by default\" screen: turn on \"Open supported links\"",
+                    isActive = null,
+                    onClick = {
+                        val details = Uri.parse("package:${context.packageName}")
+                        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            Intent(Settings.ACTION_APP_OPEN_BY_DEFAULT_SETTINGS, details)
+                        } else {
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, details)
+                        }
+                        runCatching { context.startActivity(intent) }
+                    },
                 )
             )
         )
