@@ -7,11 +7,17 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -22,15 +28,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
 import androidx.core.net.toUri
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.multiplatform.webview.web.LoadingState
 import com.multiplatform.webview.web.WebView
@@ -56,6 +66,13 @@ import com.ycngmn.nobook.utils.jsBridge.WatchHistoryBridge
 import com.ycngmn.nobook.utils.rememberAutoDesktop
 import com.ycngmn.nobook.utils.rememberImeHeight
 import kotlinx.coroutines.delay
+
+private const val HOME_URL = "https://m.facebook.com/"
+
+private const val EARLY_STYLE_JS =
+    "(function(){var s=document.createElement('style');" +
+        "s.textContent='[role=\"button\"][aria-label=\"Facebook logo\" i] img{visibility:hidden}';" +
+        "(document.head||document.documentElement).appendChild(s);})();"
 
 @Composable
 fun NobookWebView(
@@ -106,6 +123,12 @@ fun NobookWebView(
         }
     }
 
+    // A link opened while Nobook is already running arrives as a new `url` (singleTask + onNewIntent).
+    var firstUrl by remember { mutableStateOf(true) }
+    LaunchedEffect(url) {
+        if (firstUrl) firstUrl = false else navigator.loadUrl(url)
+    }
+
     var settingsToggle by rememberSaveable { mutableStateOf(false) }
     var showWatchHistory by rememberSaveable { mutableStateOf(false) }
     var showAccountManagement by rememberSaveable { mutableStateOf(false) }
@@ -113,7 +136,10 @@ fun NobookWebView(
     // allow exiting while scrolling to top.
     var exitScroll by remember { mutableStateOf(false) }
     BackHandler {
-        if (exitScroll) {
+        if (MessengerLinks.needsDesktopSite(state.lastLoadedUrl)) {
+            // Messenger's own page swallows back presses (open menus/dialogs): leave it directly.
+            if (navigator.canGoBack) navigator.navigateBack() else navigator.loadUrl(HOME_URL)
+        } else if (exitScroll) {
             activity?.finish()
         } else {
             navigator.evaluateJavaScript("backHandlerNB();") {
@@ -277,6 +303,18 @@ fun NobookWebView(
         captureBackPresses = false,
         onCreated = { webView ->
 
+            // Runs before the page's own scripts: hide the Facebook wordmark at once so it does
+            // not flash before brand_logo.js (injected after load) swaps in the noBook text.
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+                runCatching {
+                    WebViewCompat.addDocumentStartJavaScript(
+                        webView,
+                        EARLY_STYLE_JS,
+                        setOf("https://*.facebook.com", "https://facebook.com")
+                    )
+                }
+            }
+
             val cookieManager = CookieManager.getInstance()
             cookieManager.setAcceptCookie(true)
             cookieManager.setAcceptThirdPartyCookies(webView, true)
@@ -337,6 +375,22 @@ fun NobookWebView(
             }
         }
     )
+
+    if (MessengerLinks.needsDesktopSite(state.lastLoadedUrl)) {
+        Box(Modifier.fillMaxSize()) {
+            IconButton(
+                onClick = {
+                    if (navigator.canGoBack) navigator.navigateBack() else navigator.loadUrl(HOME_URL)
+                },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(top = barsInsets.calculateTopPadding() + 8.dp, start = 8.dp)
+                    .background(Color(0xB3000000), CircleShape)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+            }
+        }
+    }
 
     if (showAccountManagement) {
         AccountManagementScreen(

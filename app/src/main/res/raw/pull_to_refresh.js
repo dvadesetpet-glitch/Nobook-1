@@ -36,15 +36,32 @@
     let armed = false;
     let refreshing = false;
 
+    let idleTimer = null;
     const hide = () => {
+        clearTimeout(idleTimer);
         if (indicator) indicator.style.display = 'none';
+    };
+
+    // True when the touch started inside an inner scroller that is not at its top: pulling down
+    // there scrolls that list, it must not refresh the page (e.g. chat lists).
+    const insideScrolledContainer = (el) => {
+        for (let n = el; n && n !== document.body && n !== document.documentElement; n = n.parentElement) {
+            if (n.scrollTop > 0) {
+                const oy = getComputedStyle(n).overflowY;
+                if (oy === 'auto' || oy === 'scroll') return true;
+            }
+        }
+        return false;
     };
 
     document.addEventListener('touchstart', (e) => {
         tracking = false;
         armed = false;
+        hide();
         if (refreshing || e.touches.length !== 1 || onVideoPage() || scrollTop() > 0) return;
-        if (e.target instanceof Element && e.target.closest('[role="dialog"], [role="menu"], video')) return;
+        if (location.pathname.startsWith('/messages')) return;
+        if (e.target instanceof Element &&
+            (e.target.closest('[role="dialog"], [role="menu"], video') || insideScrolledContainer(e.target))) return;
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
         tracking = true;
@@ -63,6 +80,9 @@
         const pull = Math.min(dy, MAX_PULL);
         el.style.display = 'block';
         el.style.transform = 'translateY(' + (pull * 0.5 - 36) + 'px) rotate(' + (pull * 3) + 'deg)';
+        // If the touch sequence never ends properly, do not leave the spinner on screen.
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => { tracking = false; armed = false; hide(); }, 3000);
         const nowArmed = dy >= THRESHOLD;
         if (nowArmed && !armed && navigator.vibrate) navigator.vibrate(20);
         armed = nowArmed;
@@ -78,10 +98,14 @@
             el.animate([{ transform: 'translateY(24px) rotate(0deg)' }, { transform: 'translateY(24px) rotate(360deg)' }],
                 { duration: 700, iterations: Infinity });
             location.reload();
+            // If the reload does not replace this page, drop the spinner instead of leaving it stuck.
+            setTimeout(() => { refreshing = false; hide(); }, 5000);
             return;
         }
         hide();
     };
+    window.addEventListener('pageshow', () => { refreshing = false; hide(); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) hide(); });
     document.addEventListener('touchend', end, { passive: true });
     document.addEventListener('touchcancel', end, { passive: true });
 })();

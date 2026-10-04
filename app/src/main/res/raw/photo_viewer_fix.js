@@ -14,14 +14,30 @@
         if (!overlay || !scroller) {
             return;
         }
-        const img = scroller.querySelector('img[data-type="image"]');
         // The transparent block at the top of the overlay ends where the caption text starts.
         const spacer = overlay.querySelector('[role="img"]');
         const header = document.querySelector('.fixed-container:not(.above-bottom)');
-        if (!img || !spacer) return;
+        if (!spacer) return;
+
+        // Overlay hidden (or not laid out): nothing covers the picture, undo any shift.
+        if (spacer.getBoundingClientRect().height === 0 || getComputedStyle(overlay).display === 'none') {
+            if (applied !== 0) {
+                applied = 0;
+                scroller.style.transform = '';
+            }
+            return;
+        }
+
+        // In a multi-photo post use the picture that is on screen, not the first one.
+        const centreX = window.innerWidth / 2;
+        let img = null;
+        scroller.querySelectorAll('img[data-type="image"]').forEach((candidate) => {
+            const r = candidate.getBoundingClientRect();
+            if (r.height > 0 && r.left <= centreX && r.right >= centreX) img = candidate;
+        });
+        if (!img) return;
 
         const imgRect = img.getBoundingClientRect();
-        if (imgRect.height === 0) return;
 
         // Measured position without our own shift.
         const imgTopNatural = imgRect.top - applied;
@@ -49,5 +65,8 @@
 
     new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
     window.addEventListener('resize', schedule);
+    // Swiping to another photo changes no DOM node, so listen for the scroll/touch itself.
+    document.addEventListener('scroll', schedule, true);
+    document.addEventListener('touchend', schedule, { passive: true, capture: true });
     schedule();
 })();

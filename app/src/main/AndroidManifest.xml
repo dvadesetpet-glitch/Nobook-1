@@ -24,6 +24,7 @@
             android:name=".MainActivity"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleTask"
             android:exported="true"
             android:theme="@style/Theme.Nobook">
 
@@ -47,6 +48,23 @@
                 <data android:host="fb.watch" />
                 <data android:scheme="https" />
                 <data android:host="facebook.com" />
+            </intent-filter>
+
+            <!-- Other Facebook / Messenger link hosts. No autoVerify: these domains are not ours to verify. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="https" />
+                <data android:host="*.facebook.com" />
+                <data android:host="fb.com" />
+                <data android:host="www.fb.com" />
+                <data android:host="fb.me" />
+                <data android:host="m.me" />
+                <data android:host="messenger.com" />
+                <data android:host="www.messenger.com" />
             </intent-filter>
 
         </activity>
