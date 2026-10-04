@@ -19,6 +19,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -43,6 +44,7 @@ import com.ycngmn.nobook.ui.viewmodel.MainViewModel
 import com.ycngmn.nobook.ui.viewmodel.SettingsViewModel
 import com.ycngmn.nobook.ui.viewmodel.WatchHistoryViewModel
 import com.ycngmn.nobook.utils.DESKTOP_USER_AGENT
+import com.ycngmn.nobook.utils.MessengerLinks
 import com.ycngmn.nobook.utils.ExternalRequestInterceptor
 import com.ycngmn.nobook.utils.fileChooserWebViewParams
 import com.ycngmn.nobook.utils.jsBridge.AdFilteringBridge
@@ -67,19 +69,34 @@ fun NobookWebView(
     // Not rememberSaveableWebViewState: it puts the whole WebView back-stack (~770 KB) into the
     // saved instance state and crashes with TransactionTooLargeException when the app is stopped.
     val state = rememberWebViewState(url)
-    val navigator = rememberWebViewNavigator(
-        requestInterceptor = ExternalRequestInterceptor { externalUrl ->
-            val intent = Intent(Intent.ACTION_VIEW, externalUrl.toUri())
-            runCatching {
-                context.startActivity(intent)
-            }.onFailure {
-                Toast.makeText(
-                    context,
-                    resources.getString(R.string.not_supported),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+
+    // Messenger only works in the desktop layout, so the user agent follows the page being opened.
+    val desktopSetting by rememberUpdatedState(settingsVM.desktopLayout.collectAsState().value)
+    var appliedUserAgent by remember { mutableStateOf<String?>(null) }
+    fun applyUserAgent(forUrl: String?) {
+        val ua = if (desktopSetting || MessengerLinks.needsDesktopSite(forUrl)) DESKTOP_USER_AGENT else ""
+        if (ua != appliedUserAgent) {
+            state.nativeWebView.settings.userAgentString = ua
+            appliedUserAgent = ua
         }
+    }
+
+    val navigator = rememberWebViewNavigator(
+        requestInterceptor = ExternalRequestInterceptor(
+            onMainFrameUrl = { applyUserAgent(it) },
+            handleExternalUrl = { externalUrl ->
+                val intent = Intent(Intent.ACTION_VIEW, externalUrl.toUri())
+                runCatching {
+                    context.startActivity(intent)
+                }.onFailure {
+                    Toast.makeText(
+                        context,
+                        resources.getString(R.string.not_supported),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        )
     )
 
     LaunchedEffect(navigator) {
@@ -212,8 +229,15 @@ fun NobookWebView(
 
 
     LaunchedEffect(isDesktop) {
-        val userAgent = if (isDesktop) DESKTOP_USER_AGENT else ""
-        state.nativeWebView.settings.userAgentString = userAgent
+        applyUserAgent(state.lastLoadedUrl)
+    }
+
+    // Back/forward do not go through the request interceptor: when the page changes to or from
+    // Messenger, switch the user agent and reload so the right layout is served.
+    LaunchedEffect(state.lastLoadedUrl) {
+        val before = appliedUserAgent
+        applyUserAgent(state.lastLoadedUrl)
+        if (before != null && appliedUserAgent != before) navigator.reload()
     }
 
     // needed to consume extra padding when keyboard is open
