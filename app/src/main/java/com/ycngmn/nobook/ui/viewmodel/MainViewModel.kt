@@ -57,6 +57,7 @@ class MainViewModel(
             Script(true, R.raw.haptic_feedback, "haptic_feedback.js", fetchRemote = false),
             Script(true, R.raw.remove_all, "remove_all.js", fetchRemote = false),
             Script(true, R.raw.pull_to_refresh, "pull_to_refresh.js", fetchRemote = false),
+            Script(true, R.raw.photo_viewer_fix, "photo_viewer_fix.js", fetchRemote = false),
             Script(!settings.hideReels.value, R.raw.reel_speed, "reel_speed.js", fetchRemote = false),
             Script(settings.enableDownloadContent.value, R.raw.download_content, "download_content.js"),
             Script(settings.enableCopyToClipboard.value, R.raw.copy_to_clipboard, "copy_to_clipboard.js"),
