@@ -56,6 +56,8 @@ class MainViewModel(
             Script(true, R.raw.hide_open_app, "hide_open_app.js", fetchRemote = false),
             Script(true, R.raw.haptic_feedback, "haptic_feedback.js", fetchRemote = false),
             Script(true, R.raw.remove_all, "remove_all.js", fetchRemote = false),
+            Script(true, R.raw.pull_to_refresh, "pull_to_refresh.js", fetchRemote = false),
+            Script(!settings.hideReels.value, R.raw.reel_speed, "reel_speed.js", fetchRemote = false),
             Script(settings.enableDownloadContent.value, R.raw.download_content, "download_content.js"),
             Script(settings.enableCopyToClipboard.value, R.raw.copy_to_clipboard, "copy_to_clipboard.js"),
             Script(settings.stickyNavbar.value, R.raw.sticky_navbar, "sticky_navbar.js"),
