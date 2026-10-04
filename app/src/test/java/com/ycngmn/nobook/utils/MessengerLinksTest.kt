@@ -22,7 +22,7 @@ class MessengerLinksTest {
 
     @Test
     fun mDotMeKeepsTheThread() {
-        assertEquals("https://www.facebook.com/messages/tjohn.doe", MessengerLinks.toInternalUrl("https://m.me/john.doe"))
+        assertEquals("https://www.facebook.com/messages/t/john.doe", MessengerLinks.toInternalUrl("https://m.me/john.doe"))
         assertEquals(messages, MessengerLinks.toInternalUrl("https://m.me/"))
     }
 
