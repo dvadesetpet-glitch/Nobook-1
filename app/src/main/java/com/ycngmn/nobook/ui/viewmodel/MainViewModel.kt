@@ -55,6 +55,7 @@ class MainViewModel(
             Script(true, R.raw.fix_media_source, "fix_media_source.js", fetchRemote = false),
             Script(true, R.raw.hide_open_app, "hide_open_app.js", fetchRemote = false),
             Script(true, R.raw.brand_logo, "brand_logo.js", fetchRemote = false),
+            Script(true, R.raw.official_layout, "official_layout.js", fetchRemote = false),
             Script(true, R.raw.haptic_feedback, "haptic_feedback.js", fetchRemote = false),
             Script(true, R.raw.remove_all, "remove_all.js", fetchRemote = false),
             Script(true, R.raw.pull_to_refresh, "pull_to_refresh.js", fetchRemote = false),

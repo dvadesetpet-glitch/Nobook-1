@@ -29,12 +29,12 @@
             text.textContent = TEXT;
             text.setAttribute('style', [
                 'position:absolute', 'left:0', 'top:0', 'height:100%', 'display:flex', 'align-items:center',
-                'font:800 25px/1 "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                'letter-spacing:-0.5px', 'white-space:nowrap', 'pointer-events:none'
+                'font:800 28px/1 "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                'letter-spacing:-0.8px', 'white-space:nowrap', 'pointer-events:none'
             ].join(';'));
             container.appendChild(text);
         }
-        text.style.color = isLightTheme() ? '#1877f2' : '#ffffff';
+        text.style.color = isLightTheme() ? '#0866ff' : '#ffffff';
     };
 
     const scan = () => {
