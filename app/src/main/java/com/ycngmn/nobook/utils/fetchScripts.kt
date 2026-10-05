@@ -46,7 +46,7 @@ suspend fun fetchScripts(
                     val remote =
                         if (httpClient != null && script.fetchRemote) fetchRemoteScript(httpClient, script)
                         else null
-                    remote ?: fallbackContent(script.resourceId)
+                    isolateScript(script.scriptTitle, remote ?: fallbackContent(script.resourceId))
                 }
             }.awaitAll()
         }
@@ -137,6 +137,13 @@ internal fun minifyJavaScript(js: String): String {
         .filter { it.isNotEmpty() }
         .joinToString("\n")
 }
+
+/**
+ * Gives each script its own block and try/catch, so one that throws (upstream copies change
+ * without notice) no longer skips every script after it in the bundle.
+ */
+internal fun isolateScript(title: String, js: String): String =
+    "try {\n$js\n} catch (e) { console.error('[Nobook] $title failed', e); }"
 
 /**
  * Runs the whole bundle once per document, inside its own function scope.
