@@ -16,11 +16,8 @@
     <string name="saved_to_downloads">Guardado en Descargas</string>
     <string name="download_failed_invalid_data">Descarga fallida: datos inválidos</string>
     <string name="failed_to_save_file">Error al guardar el archivo</string>
-    <string name="image_copied_to_clipboard">Imagen copiada al portapapeles</string>
-    <string name="copy_failed_invalid_data">Copia fallida: datos inválidos</string>
-    <string name="copy_failed_invalid_image">Copia fallida: imagen inválida</string>
-    <string name="failed_to_copy_image">Error al copiar la imagen</string>
-    <string name="clipboard_not_supported">Portapapeles no compatible en esta versión</string>
+    <string name="link_copied_to_clipboard">Enlace copiado al portapapeles</string>
+    <string name="failed_to_copy_link">Error al copiar el enlace</string>
     <string name="suggested_posts">Publicaciones sugeridas</string>
     <string name="reels">Reels</string>
     <string name="stories">Stories</string>
