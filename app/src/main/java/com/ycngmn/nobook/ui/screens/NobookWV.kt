@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
@@ -232,6 +234,20 @@ fun NobookWebView(
 
     LaunchedEffect(isImmersiveMode, themeColor.value) {
         setWindow(isImmersiveMode)
+    }
+
+    // Watch History / Accounts draw the app theme, not the page's colour: match the status bar
+    // icons to that background while they are open, then restore the page's.
+    val overlayIsLight = MaterialTheme.colorScheme.background.luminance() > 0.5f
+    LaunchedEffect(showWatchHistory, showAccountManagement, overlayIsLight) {
+        if (showWatchHistory || showAccountManagement) {
+            val window = activity?.window ?: return@LaunchedEffect
+            val controller = WindowInsetsControllerCompat(window, window.decorView)
+            controller.isAppearanceLightStatusBars = overlayIsLight
+            controller.isAppearanceLightNavigationBars = overlayIsLight
+        } else {
+            setWindow(isImmersiveMode)
+        }
     }
 
     val userScripts by viewModel.scripts

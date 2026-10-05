@@ -32,6 +32,14 @@ class SettingsViewModel(
 
     private val initialPrefs = runBlocking { dataStore.prefs.first() }
 
+    /** Every setting at once; the settings dialog compares it to tell whether anything changed. */
+    // Eagerly: the dialog snapshots it on open, so it must already hold the current values.
+    val allPrefs = dataStore.prefs.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs,
+        started = SharingStarted.Eagerly
+    )
+
     val removeAds = dataStore.removeAds.stateIn(
         scope = viewModelScope,
         initialValue = initialPrefs[REMOVE_ADS] ?: true,
