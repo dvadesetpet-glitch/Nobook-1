@@ -38,6 +38,7 @@
             background: transparent !important;
         }
         #${MSG_ID}, #${MENU_ID} { cursor: pointer; }
+        #${MSG_ID} > .nb-badge > div { margin-left: 22px !important; }
         /* Facebook containers have pointer-events: none and enable it per button. */
         #${MSG_ID}, #${MENU_ID} { pointer-events: auto !important; }
         /* Settings gear (scripts.js) at the size of the other header icons. */
@@ -83,6 +84,37 @@
         return el;
     };
 
+    // Badges (unread counts) stay on the hidden tabs; copies show them on our buttons. A badge
+    // is three stacked layers (ring, red disc, count) that Facebook hides with "ref-hidden".
+    const stripData = (root) => {
+        [root, ...root.querySelectorAll('*')].forEach((el) => {
+            [...el.attributes].forEach((a) => { if (a.name.startsWith('data-')) el.removeAttribute(a.name); });
+        });
+        return root;
+    };
+
+    const syncBadge = (dst, sourceTab) => {
+        const src = sourceTab && sourceTab.children[2];
+        if (!dst || !src) return;
+        [...src.children].forEach((layer, i) => {
+            const copy = dst.children[i];
+            if (!copy) return;
+            if (copy.className !== layer.className) copy.className = layer.className;
+            // Compare text, not markup: the copy is stripped of data-* attributes (Facebook finds
+            // the element to update by data-*-ref-key and must keep finding the original).
+            if (copy.textContent !== layer.textContent || !copy.firstElementChild) {
+                copy.innerHTML = layer.innerHTML;
+                stripData(copy);
+            }
+        });
+    };
+
+    const syncBadges = () => {
+        syncBadge(document.querySelector(`#${MSG_ID} > .nb-badge`), tab('messages'));
+        // Marketplace lives in the menu now, as in the official app.
+        syncBadge(document.querySelector(`#${MENU_ID} > div:nth-child(3)`), tab('marketplace'));
+    };
+
     const ensureMessenger = () => {
         const menu = document.querySelector('[role="button"][aria-label="Facebook menu"]');
         const messages = tab('messages');
@@ -92,11 +124,19 @@
         const glyph = messages.querySelector('.native-text span');
         const span = btn.querySelector('.native-text span');
         if (glyph && span) span.textContent = glyph.textContent;
+        const source = messages.children[2];
+        if (source) {
+            const badge = stripData(source.cloneNode(true));
+            badge.classList.add('nb-badge');
+            badge.setAttribute('style', 'margin-top:-43px; height:28px; z-index:0; width:45px;');
+            btn.appendChild(badge);
+        }
         menu.after(btn);
+        syncBadges();
     };
 
-    // A copy of a real tab (same size, icon position and separator line) showing the menu
-    // icon, without Facebook's attributes or badges.
+    // A copy of a real tab (same size, icon position, separator line and badge) showing the
+    // menu icon, without Facebook's attributes.
     const ensureMenuTab = () => {
         const last = tab('marketplace');
         const model = tab('notifications');
@@ -108,11 +148,7 @@
         });
         btn.setAttribute('role', 'button');
         btn.setAttribute('aria-label', 'menu');
-        btn.querySelectorAll('*').forEach((el) => {
-            [...el.attributes].forEach((a) => { if (a.name.startsWith('data-')) el.removeAttribute(a.name); });
-        });
-        const badges = btn.children[2];
-        if (badges) badges.remove();
+        stripData(btn);
         const span = btn.querySelector('.native-text span');
         if (span) span.textContent = MENU_GLYPH;
         btn.addEventListener('click', (e) => {
@@ -124,6 +160,7 @@
             else location.href = '/bookmarks/';
         });
         last.after(btn);
+        syncBadges();
     };
 
     // Colours of copied icons follow the original (theme changes repaint the originals).
@@ -155,5 +192,7 @@
     };
 
     apply();
+    // Badge changes are class / text updates the childList observer does not see.
+    setInterval(syncBadges, 1000);
     new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
 })();
