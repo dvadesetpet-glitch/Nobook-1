@@ -21,7 +21,8 @@
             const r = v.getBoundingClientRect();
             const w = Math.min(r.right, window.innerWidth) - Math.max(r.left, 0);
             const h = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
-            const area = w > 0 && h > 0 ? w * h : 0;
+            // A playing video wins over a larger paused/preloaded neighbour.
+            const area = w > 0 && h > 0 ? w * h * (v.paused ? 1 : 1000) : 0;
             if (area > bestArea) {
                 bestArea = area;
                 best = v;
@@ -54,9 +55,24 @@
     let boosted = null;
     let swallowClickUntil = 0;
 
+    // The player resets playbackRate on its own (new source, buffering, reel change), which made
+    // the hold buzz but stay at 1x. While held, keep re-applying it, also to a newly shown video.
+    let keeper = null;
+    const keep = () => {
+        if (!boosted) return;
+        const v = currentVideo();
+        if (v && v !== boosted) {
+            boosted.playbackRate = 1;
+            boosted = v;
+        }
+        if (boosted.playbackRate !== SPEED) boosted.playbackRate = SPEED;
+    };
+
     const stop = () => {
         clearTimeout(timer);
         timer = null;
+        clearInterval(keeper);
+        keeper = null;
         if (boosted) {
             boosted.playbackRate = 1;
             boosted = null;
@@ -64,6 +80,10 @@
             showBadge(false);
         }
     };
+
+    document.addEventListener('ratechange', (e) => {
+        if (boosted && e.target === boosted && boosted.playbackRate !== SPEED) boosted.playbackRate = SPEED;
+    }, true);
 
     document.addEventListener('touchstart', (e) => {
         stop();
@@ -78,6 +98,7 @@
             if (!v) return;
             boosted = v;
             v.playbackRate = SPEED;
+            keeper = setInterval(keep, 150);
             showBadge(true);
             if (navigator.vibrate) navigator.vibrate(15);
         }, HOLD_MS);
