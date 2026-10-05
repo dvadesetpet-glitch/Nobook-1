@@ -18,17 +18,21 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,10 +40,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import com.ycngmn.nobook.R
 import com.ycngmn.nobook.ui.components.AdaptiveContainer
+import com.ycngmn.nobook.ui.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +58,10 @@ fun SettingsDialog(
     onOpenAccountManagement: (() -> Unit)? = null
 ) {
     val scrollState = rememberScrollState()
+    val settingsViewModel: SettingsViewModel = viewModel()
+    // "Apply immediately" only makes sense once a setting has changed since the dialog opened.
+    val prefsOnOpen = remember { settingsViewModel.allPrefs.value }
+    val prefs by settingsViewModel.allPrefs.collectAsState()
 
     Dialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -70,6 +80,9 @@ fun SettingsDialog(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
+                    // The bar takes the page's theme colour (dark in Facebook's dark mode).
+                    val barContent = if (themeColor.luminance() > 0.5f) Color.Black else Color.White
+                    CompositionLocalProvider(LocalContentColor provides barContent) {
                     IconButton(
                         modifier = Modifier.align(Alignment.TopStart).size(22.dp),
                         onClick = { onDismiss() }
@@ -82,6 +95,7 @@ fun SettingsDialog(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.align(Alignment.Center)
                     )
+                    }
                 }
             },
             floatingActionButton = {
@@ -90,8 +104,9 @@ fun SettingsDialog(
                         scrollState.maxValue == 0 || scrollState.value < scrollState.maxValue
                     }
                 }
+                val isChanged = prefs != prefsOnOpen
                 AnimatedVisibility(
-                    isVisible,
+                    isVisible && isChanged,
                     enter = fadeIn() + scaleIn(),
                     exit = fadeOut() + scaleOut()
                 ) {

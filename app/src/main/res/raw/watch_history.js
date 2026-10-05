@@ -50,7 +50,7 @@
 
     // Facebook icon glyphs live in the private use areas; they show up in innerText.
     const ICONS = /[-‎‏]|[\uDB80-\uDBFF][\uDC00-\uDFFF]/g;
-    const NOISE = /^(follow|following|sponsored|more|see translation|reels|watch|just now|yesterday|\d[\d.,]*\s*(tis\.|k|m|mil\.)?|\d+\s*(s|m|h|d|w|y|min|mins|hr|hrs|g|tj|mj)( ago)?)$/i;
+    const NOISE = /^(follow|following|sponsored|more|see translation|tap to unmute|tap to play|unmute|mute|reels|watch|just now|yesterday|\d[\d.,]*\s*(tis\.|k|m|mil\.)?|\d+\s*(s|m|h|d|w|y|min|mins|hr|hrs|g|tj|mj)( ago)?)$/i;
 
     // "Author · caption" from the post / reel around the video (meta tags are stale in the SPA).
     const titleFrom = (post) => {
@@ -75,11 +75,12 @@
         return best;
     };
 
-    // Nearest ancestor of the video that carries text (author, caption).
+    // Nearest ancestor of the video that carries text (author, caption), skipping player
+    // overlays whose only text is noise such as "Tap to unmute".
     const containerOf = (video) => {
         let el = video.parentElement;
         for (let d = 0; el && el !== document.body && d < 12; d++, el = el.parentElement) {
-            if (el.innerText && el.innerText.trim()) return el;
+            if (titleFrom(el)) return el;
         }
         return null;
     };
