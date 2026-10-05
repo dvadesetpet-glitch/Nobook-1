@@ -1,5 +1,5 @@
 /*
- * Script to add copy to clipboard buttons for images on Facebook
+ * Copy button on photo / video views: copies the Facebook link of what is on screen.
  * Based on download_content.js
  */
 
@@ -13,7 +13,6 @@
   // Global state
   let isProcessing = false;
   let currentContentContainer = null;
-  let lastCopiedUrl = null;
   const COPY_BTN_ID = "nobook-clipboard-copier";
 
   // Selectors for finding media content
@@ -117,22 +116,6 @@
     return best;
   };
 
-  const copyVideoFrame = (video) => {
-    try {
-      const scale = Math.min(1, 1080 / Math.max(video.videoWidth, video.videoHeight));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(video.videoWidth * scale);
-      canvas.height = Math.round(video.videoHeight * scale);
-      canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-      if (window.ClipboardBridge && window.ClipboardBridge.copyImageToClipboard) {
-        window.ClipboardBridge.copyImageToClipboard(dataUrl, "image/jpeg");
-      }
-    } catch (err) {
-      console.error("Error copying video frame:", err);
-    }
-  };
-
   // Check if we are in a story or reel view
   const isInContentView = () => {
     // URL pattern checks
@@ -158,105 +141,29 @@
     return false;
   };
 
-  // Copy image to clipboard
-  const copyImageToClipboard = (url) => {
-    fetch(url)
-      .then(response => response.blob())
-      .then(blob => {
-        if (window.ClipboardBridge && window.ClipboardBridge.copyImageToClipboard) {
-          const reader = new FileReader();
-          reader.onloadend = function() {
-            if (reader.result) {
-              window.ClipboardBridge.copyImageToClipboard(
-                reader.result,
-                blob.type || "image/jpeg"
-              );
-            }
-          };
-          reader.readAsDataURL(blob);
-        } else {
-          try {
-            navigator.clipboard.write([
-              new ClipboardItem({
-                [blob.type]: blob
-              })
-            ]).then(() => {
-              // Success - bridge will show toast
-            }).catch(err => {
-              console.error("Clipboard API error:", err);
-            });
-          } catch (err) {
-            console.error("Clipboard not supported:", err);
-          }
-        }
-      })
-      .catch(err => {
-        console.error("Error copying image:", err);
-      });
-  };
+  // Facebook link of the photo / video on screen. Videos and reels share /watch/?v=ID, which
+  // also opens reels (a bare /reel/ID link lands on the feed).
+  const currentLink = () => {
+    const u = new URL(window.location.href);
+    const path = u.pathname;
+    const v = u.searchParams.get("v");
+    if (path.startsWith("/watch") && v) return "https://www.facebook.com/watch/?v=" + v;
+    const video = path.match(/^\/reels?\/(\d+)/) || path.match(/\/videos\/(?:[^/]+\/)?(\d+)/);
+    if (video) return "https://www.facebook.com/watch/?v=" + video[1];
 
-  // Extract and copy image
-  const extractAndCopyImage = () => {
-    // Find current image element
+    if (/^\/photo(\.php)?\/?$/.test(path) || path.includes("/photos/") || path.includes("/stories/")) {
+      const link = new URL("https://www.facebook.com" + path);
+      ["fbid", "set", "id", "story_fbid"].forEach(k => {
+        const value = u.searchParams.get(k);
+        if (value) link.searchParams.set(k, value);
+      });
+      return link.toString();
+    }
+
+    // Viewers that open over the page without changing the URL: link the picture itself.
     const imageElement = getCurrentImageElement();
-
-    if (imageElement && imageElement.src && imageElement.src !== lastCopiedUrl) {
-      copyImageToClipboard(imageElement.src);
-      lastCopiedUrl = imageElement.src;
-      return;
-    }
-
-    // Get container to search in
-    const container = currentContentContainer || document.body;
-
-    // Try with images
-    const images = Array.from(container.querySelectorAll("img"))
-      .filter(img =>
-        img.src &&
-        !img.src.includes("data:image") &&
-        img.src !== lastCopiedUrl &&
-        img.src.includes("fbcdn")
-      )
-      .filter(img => {
-        const rect = img.getBoundingClientRect();
-        return rect.width >= 100 && rect.height >= 100 && isElementVisible(img);
-      })
-      .sort((a, b) => {
-        const areaA = a.getBoundingClientRect().width * a.getBoundingClientRect().height;
-        const areaB = b.getBoundingClientRect().width * b.getBoundingClientRect().height;
-        return areaB - areaA; // Largest first
-      });
-
-    if (images.length > 0) {
-      copyImageToClipboard(images[0].src);
-      lastCopiedUrl = images[0].src;
-      return;
-    }
-
-    // Try background images as last resort
-    const backgroundElements = Array.from(container.querySelectorAll("*"));
-
-    for (const el of backgroundElements) {
-      const style = window.getComputedStyle(el);
-      const bgImage = style.backgroundImage;
-
-      if (
-        bgImage &&
-        bgImage !== "none" &&
-        (bgImage.includes("fbcdn.net") || bgImage.includes("fbsbx.com"))
-      ) {
-        const imageUrl = bgImage.replace(/^url\(['"](.+)['"]\)$/, "$1");
-
-        if (imageUrl !== lastCopiedUrl) {
-          copyImageToClipboard(imageUrl);
-          lastCopiedUrl = imageUrl;
-          return;
-        }
-      }
-    }
-
-    // Nothing found
-    debugLog("No image content found to copy");
+    if (imageElement && imageElement.src) return imageElement.src;
+    return "https://www.facebook.com" + path + u.search;
   };
 
   // Create and manage copy button
@@ -297,28 +204,12 @@
     // Create button element
     const btn = document.createElement("button");
     btn.id = COPY_BTN_ID;
-    btn.setAttribute("aria-label", "Copy image to clipboard");
+    btn.setAttribute("aria-label", "Copy link to clipboard");
 
     btn.addEventListener("click", () => {
-      if (onVideoPage()) {
-        const video = getVisibleVideo();
-        if (video) {
-          copyVideoFrame(video);
-          return;
-        }
+      if (window.ClipboardBridge && window.ClipboardBridge.copyLink) {
+        window.ClipboardBridge.copyLink(currentLink());
       }
-
-      // Reset state
-      currentContentContainer = null;
-      lastCopiedUrl = null;
-
-      // Find current image and container
-      const imageElement = getCurrentImageElement();
-      if (imageElement) {
-        currentContentContainer = findContentContainer(imageElement);
-      }
-
-      extractAndCopyImage();
     });
 
     document.body.appendChild(btn);
@@ -384,7 +275,6 @@
   const init = () => {
     // Reset state
     currentContentContainer = null;
-    lastCopiedUrl = null;
 
     // Initial check
     processPage();
