@@ -94,6 +94,36 @@
 - Settings 'Memory usage' item shows app JVM heap (1.6); not WebView/native memory
 - Scripts minified by string/regex-aware scanner (comments + blank lines stripped, newlines kept); unit-tested
 
+## Fixes Oct 2026 (PRs #22-#24)
+- Watch History was always empty: 1s poll re-armed 1.5s record timer -> never fired. Fixed in `watch_history.js`
+- Records reels/video pages (URL) + feed videos (5s playback with sound or fullscreen; id from `data-video-id` on `div[aria-label="Video player"]`)
+- Videos stored as `/watch/?v=ID`: loading `/reel/ID` directly lands on the feed; `/watch/?v=ID` opens reels and videos
+- Dedup by video id: FB reuses `<video>` elements between feed and video pages
+- Titles from DOM (`author · caption`); og: meta tags are stale in the SPA. Strip private-use icon glyphs, timestamps, "Tap to unmute"
+- m.facebook.com has almost no `<a href>`: navigation goes through `data-action-id` handlers
+- `fetchScripts.isolateScript()`: each injected script in its own try/catch (one throwing no longer skips the rest)
+- Copy to clipboard button copies the FB **link** (user wants link, not image): `ClipboardBridge.copyLink`. Image copy + FileProvider removed
+- Watch History thumbnails via Coil **3.4.0** (pinned: >=3.5 needs Compose 1.11+, project is on Compose 1.10 / BOM 2026.03)
+- Settings "Apply immediately" only after a change (`SettingsViewModel.allPrefs`, Eagerly)
+
+## Official-app layout (PRs #26, #27) - `res/raw/official_layout.js`
+- Header: noBook · settings gear (scripts.js) · search · Messenger. Tabs: home, reels, friends, notifications, menu (5 slots of 20vw)
+- FB elements only hidden/moved with CSS. Hide with `visibility`, never `display`: m.facebook stacks tabs with negative margin-top + absolute margin-left, so removing one makes the rest jump
+- Messenger (header) and Menu (tab) are our proxy buttons that `.click()` the hidden originals (messages tab / header menu button); menu falls back to `/bookmarks/` (Reels has no header menu)
+- Proxies need `pointer-events: auto`: FB containers have `none`, FB enables it per button
+- Badges = 3 layers (ring, red disc, count), hidden by class `ref-hidden`. Copied every 1s from the hidden tabs (messages -> header Messenger, marketplace -> menu tab); copies stripped of `data-*` because FB finds the element to update by `data-*-ref-key`
+- FB's own `.pull-to-refresh-spinner-container` hidden (z-index 1001, covered the middle tab); Nobook has its own indicator
+- Depends on FB aria-labels (`feed`, `reels`, `friends`, `notifications`, `messages`, `marketplace`, `Facebook menu`, `Search Facebook`) and icon font glyph U+F1946 (menu). If FB changes the m-site, check these first
+- brand_logo.js: wordmark 28px, #0866FF in the light theme
+
+## Debugging on emulator
+- WebView DevTools: `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>` (pid changes on every reinstall), then CDP over `ws://127.0.0.1:9222`
+- Room DB: `adb exec-out run-as com.ycngmn.nobook.test cat databases/nobook_database` (+ -wal, -shm); no sqlite3 on the emulator
+- Emulator clipboard syncs with the host: right after an app copies, a "host clipboard" text clip overwrites images. Text copies do reach the Windows clipboard (`Get-Clipboard`)
+- Git Bash mangles `/sdcard/...` paths for adb: set `MSYS_NO_PATHCONV=1`
+- Feed photo viewer did not open on the emulator (endless loading) - still to verify on a phone
+- Emulator may hold a newer versionCode than the branch: `adb install -r -d app/build/outputs/apk/debug/app-debug.apk` keeps app data
+
 ## Pending Phases
 
 ### (old) Phase 2.C scope
