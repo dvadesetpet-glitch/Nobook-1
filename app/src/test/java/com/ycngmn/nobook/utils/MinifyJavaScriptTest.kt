@@ -44,4 +44,12 @@ class MinifyJavaScriptTest {
         assertTrue(out.contains("window.__nobookBundle = true;"))
         assertTrue(out.contains("(function() {\nconst observer = 1;\n})();"))
     }
+
+    @Test
+    fun isolateScriptCatchesErrorsPerScript() {
+        val out = isolateScript("a.js", "throw new Error('x')")
+        assertTrue(out.startsWith("try {\nthrow new Error('x')\n}"))
+        assertTrue(out.contains("catch (e)"))
+        assertTrue(out.contains("a.js"))
+    }
 }
