@@ -98,6 +98,41 @@
     });
   };
 
+  // Video pages (reels, watch, videos): there is no <img> to copy, so the current frame is copied.
+  const onVideoPage = () => /^\/(reel|reels|watch|videos)(\/|$)/.test(window.location.pathname);
+
+  const getVisibleVideo = () => {
+    let best = null;
+    let bestArea = 0;
+    document.querySelectorAll("video").forEach(v => {
+      const r = v.getBoundingClientRect();
+      const w = Math.min(r.right, window.innerWidth) - Math.max(r.left, 0);
+      const h = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+      const area = w > 0 && h > 0 ? w * h * (v.paused ? 1 : 1000) : 0;
+      if (area > bestArea && v.videoWidth > 0) {
+        bestArea = area;
+        best = v;
+      }
+    });
+    return best;
+  };
+
+  const copyVideoFrame = (video) => {
+    try {
+      const scale = Math.min(1, 1080 / Math.max(video.videoWidth, video.videoHeight));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(video.videoWidth * scale);
+      canvas.height = Math.round(video.videoHeight * scale);
+      canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+      if (window.ClipboardBridge && window.ClipboardBridge.copyImageToClipboard) {
+        window.ClipboardBridge.copyImageToClipboard(dataUrl, "image/jpeg");
+      }
+    } catch (err) {
+      console.error("Error copying video frame:", err);
+    }
+  };
+
   // Check if we are in a story or reel view
   const isInContentView = () => {
     // URL pattern checks
@@ -265,6 +300,14 @@
     btn.setAttribute("aria-label", "Copy image to clipboard");
 
     btn.addEventListener("click", () => {
+      if (onVideoPage()) {
+        const video = getVisibleVideo();
+        if (video) {
+          copyVideoFrame(video);
+          return;
+        }
+      }
+
       // Reset state
       currentContentContainer = null;
       lastCopiedUrl = null;
@@ -287,6 +330,11 @@
   const updateButtonVisibility = () => {
     let btn = document.getElementById(COPY_BTN_ID);
     if (!btn) btn = createCopyButton();
+
+    if (onVideoPage() && getVisibleVideo()) {
+      btn.classList.add("visible");
+      return;
+    }
 
     if (isInContentView()) {
       const imageElement = getCurrentImageElement();
@@ -340,6 +388,9 @@
 
     // Initial check
     processPage();
+
+    // Reels change without a reliable DOM signal the observer filters on.
+    setInterval(processPage, 1500);
 
     // Set up DOM observer
     const observer = new MutationObserver(mutations => {

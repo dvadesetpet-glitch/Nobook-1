@@ -61,6 +61,7 @@ import com.ycngmn.nobook.utils.jsBridge.AdFilteringBridge
 import com.ycngmn.nobook.utils.jsBridge.ClipboardBridge
 import com.ycngmn.nobook.utils.jsBridge.DownloadBridge
 import com.ycngmn.nobook.utils.jsBridge.NobookSettings
+import com.ycngmn.nobook.utils.jsBridge.ScreenBridge
 import com.ycngmn.nobook.utils.jsBridge.ThemeChange
 import com.ycngmn.nobook.utils.jsBridge.WatchHistoryBridge
 import com.ycngmn.nobook.utils.rememberAutoDesktop
@@ -367,6 +368,10 @@ fun NobookWebView(
                     "WatchHistoryBridge"
                 )
                 addJavascriptInterface(
+                    ScreenBridge(activity),
+                    "ScreenBridge"
+                )
+                addJavascriptInterface(
                     AdFilteringBridge { viewModel.setBlockedAdCount(it) },
                     "AdFilteringBridge"
                 )
@@ -418,8 +423,12 @@ fun NobookWebView(
         )
     }
 
+    // Was a bare call in the composition body: it re-ran on every recomposition, i.e. every toggle.
+    LaunchedEffect(settingsToggle) {
+        if (settingsToggle) setWindow(false)
+    }
+
     if (settingsToggle) {
-        setWindow(false)
         SettingsDialog(
             themeColor = themeColor,
             blockedAdCount = viewModel.blockedAdCount.value,
