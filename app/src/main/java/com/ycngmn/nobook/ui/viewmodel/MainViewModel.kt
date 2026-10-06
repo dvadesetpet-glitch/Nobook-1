@@ -62,7 +62,7 @@ class MainViewModel(
             Script(true, R.raw.photo_viewer_fix, "photo_viewer_fix.js", fetchRemote = false),
             Script(true, R.raw.keep_screen_on, "keep_screen_on.js", fetchRemote = false),
             Script(!settings.hideReels.value, R.raw.reel_speed, "reel_speed.js", fetchRemote = false),
-            Script(settings.enableDownloadContent.value, R.raw.download_content, "download_content.js"),
+            Script(settings.enableDownloadContent.value, R.raw.download_content, "download_content.js", fetchRemote = false),
             Script(settings.enableCopyToClipboard.value, R.raw.copy_to_clipboard, "copy_to_clipboard.js", fetchRemote = false),
             Script(settings.stickyNavbar.value, R.raw.sticky_navbar, "sticky_navbar.js"),
             Script(!settings.pinchToZoom.value, R.raw.pinch_to_zoom, "pinch_to_zoom.js"),

@@ -65,6 +65,18 @@
   };
 
 
+  // Streaming (MSE) videos expose a blob: URL that cannot be fetched; only direct links work.
+  const hasDirectSrc = (el) => !!el.src && !el.src.startsWith("blob:");
+
+  const getVisibleBlobVideo = () =>
+    Array.from(document.querySelectorAll("video")).find(v => {
+      const r = v.getBoundingClientRect();
+      const w = Math.min(r.right, window.innerWidth) - Math.max(r.left, 0);
+      const h = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+      return !hasDirectSrc(v) && v.src && r.width > 150 && r.height > 150 &&
+        w > 0 && h > 0 && w * h > r.width * r.height * 0.6;
+    });
+
   // Find the appropriate container for the content
   const findContentContainer = (element) => {
     if (!element) return null;
@@ -85,7 +97,7 @@
 
       // Find the first visible element
       for (const element of elements) {
-        if (isElementVisible(element) && element.src) {
+        if (isElementVisible(element) && hasDirectSrc(element)) {
           return element;
         }
       }
@@ -96,7 +108,7 @@
       document.querySelectorAll('video:not([hidden]), img[src*="fbcdn"]:not([width="16"]):not([hidden])')
     ).find(el => {
       const rect = el.getBoundingClientRect();
-      return isElementVisible(el) && rect.width > 150 && rect.height > 150 && el.src;
+      return isElementVisible(el) && rect.width > 150 && rect.height > 150 && hasDirectSrc(el);
     });
   };
 
@@ -126,27 +138,25 @@
     return false;
   };
 
-  // Download media from URL
+  // Download media from URL: the app saves the direct fbcdn link itself (no base64 round trip).
   const downloadMedia = (url) => {
+    if (!window.DownloadBridge) return;
+    if (url.startsWith("https://") && window.DownloadBridge.downloadUrl) {
+      window.DownloadBridge.downloadUrl(url);
+      return;
+    }
     fetch(url)
       .then(response => response.blob())
       .then(blob => {
-        if (window.DownloadBridge && window.DownloadBridge.downloadBase64File) {
-          const reader = new FileReader();
-          reader.onloadend = function() {
-            if (reader.result) {
-              window.DownloadBridge.downloadBase64File(
-                reader.result,
-                blob.type || "image/jpeg"
-              );
-            }
-          };
-          reader.readAsDataURL(blob);
-        }
+        const reader = new FileReader();
+        reader.onloadend = function() {
+          if (reader.result) {
+            window.DownloadBridge.downloadBase64File(reader.result, blob.type || "image/jpeg");
+          }
+        };
+        reader.readAsDataURL(blob);
       })
-      .catch(err => {
-        console.error("Error downloading media:", err);
-      });
+      .catch(err => console.error("Error downloading media:", err));
   };
 
   // Extract and download videos or images
@@ -165,7 +175,7 @@
 
     // Find videos first
     const videoElement = container.querySelector("video:not([hidden])");
-    if (videoElement && videoElement.src && videoElement.src !== lastDownloadedUrl) {
+    if (videoElement && hasDirectSrc(videoElement) && videoElement.src !== lastDownloadedUrl) {
       downloadMedia(videoElement.src);
       lastDownloadedUrl = videoElement.src;
       return;
@@ -220,6 +230,136 @@
     debugLog("No media content found to download");
   };
 
+  // ---- Feed posts ----------------------------------------------------------------------------
+  // The feed has no per-post links in its DOM and plays videos from blob: URLs, so the button
+  // follows the media that fills most of the screen. Pictures are saved from their own link;
+  // videos are opened in the viewer (where the player gets a direct mp4), saved, then closed.
+  let feedTarget = null;
+  let busy = false;
+
+  const isVideoThumb = (img) => /\/t15\.5256-/.test(img.src); // poster of a video post
+
+  const findFeedMedia = () => {
+    let best = null;
+    let bestArea = 0;
+    document.querySelectorAll("video, img[src*='fbcdn']").forEach(el => {
+      if (el.closest("[data-is-h-scrollable]")) return; // stories tray, carousels of avatars
+      const r = el.getBoundingClientRect();
+      if (r.width < 200 || r.height < 150) return;
+      const w = Math.min(r.right, window.innerWidth) - Math.max(r.left, 0);
+      const h = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+      if (w <= 0 || h <= 0) return;
+      const area = w * h;
+      if (area > bestArea) { bestArea = area; best = el; }
+    });
+    // Needs at least a third of the screen so the button never points at a neighbouring post.
+    return bestArea > window.innerWidth * window.innerHeight / 3 ? best : null;
+  };
+
+  const placeButton = (btn, el) => {
+    const r = el.getBoundingClientRect();
+    const top = Math.min(Math.max(r.top + 8, 120), window.innerHeight - 60);
+    btn.style.top = top + "px";
+  };
+
+  // Streaming (blob:) videos are DASH: a video-only and an audio-only mp4 per clip. The player's
+  // requests show up in the resource timing list; with the byte range removed each URL is the
+  // whole track, and the app muxes the two into one mp4.
+  let navSince = 0; // when the current viewer page was opened
+  let lastPath = location.pathname + location.search;
+
+  const stripRange = (url) => {
+    const u = new URL(url);
+    u.searchParams.delete("bytestart");
+    u.searchParams.delete("byteend");
+    return u.toString();
+  };
+
+  // The clip on screen is the one whose length (duration_s in the request's efg blob) matches the
+  // player's; when several match (preloaded neighbours), the most recently requested wins.
+  const playingDuration = () => {
+    let best = null;
+    let bestArea = 0;
+    document.querySelectorAll("video").forEach(v => {
+      const r = v.getBoundingClientRect();
+      const w = Math.min(r.right, window.innerWidth) - Math.max(r.left, 0);
+      const h = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+      const area = w > 0 && h > 0 ? w * h : 0;
+      if (area > bestArea && isFinite(v.duration)) { bestArea = area; best = v; }
+    });
+    return best ? best.duration : null;
+  };
+
+  const dashTracks = (since) => {
+    const duration = playingDuration();
+    const tracks = [];
+    performance.getEntriesByType("resource").forEach(e => {
+      if (e.startTime < since || !/\.mp4/.test(e.name) || !e.name.includes("fbcdn")) return;
+      try {
+        const u = new URL(e.name);
+        const efg = JSON.parse(atob(decodeURIComponent(u.searchParams.get("efg"))));
+        const tag = efg.vencode_tag || "";
+        if (!tag.startsWith("dash")) return;
+        tracks.push({
+          asset: String(efg.xpv_asset_id),
+          length: efg.duration_s,
+          audio: /audio/.test(tag),
+          height: parseInt((tag.match(/_(\d+)p$/) || [0, 0])[1], 10),
+          url: stripRange(e.name)
+        });
+      } catch (err) { /* not one of the player's requests */ }
+    });
+    const videos = tracks.filter(t => !t.audio);
+    const matching = duration === null ? videos
+      : videos.filter(t => typeof t.length === "number" && Math.abs(t.length - duration) <= 1);
+    const pick = matching.length ? matching[matching.length - 1] : videos[0];
+    if (!pick) return null;
+    const mine = tracks.filter(t => t.asset === pick.asset);
+    const video = mine.filter(t => !t.audio).sort((x, y) => y.height - x.height)[0];
+    const audio = mine.find(t => t.audio);
+    return { video: video.url, audio: audio ? audio.url : "" };
+  };
+
+  const downloadDash = (since) => {
+    const t = dashTracks(since);
+    if (t && window.DownloadBridge && window.DownloadBridge.downloadDash) {
+      window.DownloadBridge.downloadDash(t.video, t.audio);
+      return true;
+    }
+    return false;
+  };
+
+  const openVideoAndDownload = (el) => {
+    busy = true;
+    const startPath = location.pathname + location.search;
+    const since = performance.now();
+    (el.closest('[role="button"]') || el).click();
+    const started = Date.now();
+    const timer = setInterval(() => {
+      const opened = location.pathname + location.search !== startPath;
+      const timedOut = Date.now() - started > 9000;
+      if ((opened && Date.now() - started > 1500 && downloadDash(since)) || timedOut) {
+        clearInterval(timer);
+        setTimeout(() => {
+          busy = false;
+          if (opened) history.back();
+        }, 800);
+      }
+    }, 400);
+  };
+
+  const downloadFeedMedia = (el) => {
+    if (busy) return;
+    if (el.tagName === "VIDEO") {
+      if (hasDirectSrc(el)) downloadMedia(el.src);
+      else openVideoAndDownload(el);
+    } else if (isVideoThumb(el)) {
+      openVideoAndDownload(el);
+    } else {
+      downloadMedia(el.src);
+    }
+  };
+
   // Create and manage download button
   const createDownloadButton = () => {
     // Add CSS for the button
@@ -261,12 +401,21 @@
     btn.setAttribute("aria-label", "Download content");
 
     btn.addEventListener("click", () => {
+      if (feedTarget) {
+        downloadFeedMedia(feedTarget);
+        return;
+      }
       // Reset state
       currentContentContainer = null;
       lastDownloadedUrl = null;
 
       // Find current media and container
+      // A streaming video on screen wins over the thumbnails and avatars around it.
       const mediaElement = getCurrentMediaElement();
+      if ((!mediaElement || mediaElement.tagName !== "VIDEO") && getVisibleBlobVideo()) {
+        downloadDash(navSince);
+        return;
+      }
       if (mediaElement) {
         currentContentContainer = findContentContainer(mediaElement);
       }
@@ -284,8 +433,21 @@
     let btn = document.getElementById(DOWNLOAD_BTN_ID);
     if (!btn) btn = createDownloadButton();
 
+    if (!(isInStoryOrReelView() && !isFeed())) {
+      feedTarget = busy ? feedTarget : findFeedMedia();
+      if (feedTarget) {
+        placeButton(btn, feedTarget);
+        btn.classList.add("visible");
+      } else {
+        btn.classList.remove("visible");
+      }
+      return;
+    }
+    feedTarget = null;
+    btn.style.top = "";
+
     if (isInStoryOrReelView() && !isFeed()) {
-      const mediaElement = getCurrentMediaElement();
+      const mediaElement = getCurrentMediaElement() || getVisibleBlobVideo();
 
       // Always hide "Open in App" buttons
       hideOpenAppButtons();
@@ -338,6 +500,8 @@
 
   // Main processing function
   const processPage = () => {
+    const path = location.pathname + location.search;
+    if (path !== lastPath) { lastPath = path; navSince = performance.now(); }
     if (isProcessing) return;
     isProcessing = true;
 
@@ -368,6 +532,9 @@
       );
       if (hasRelevantChanges) processPage();
     });
+
+    window.addEventListener("scroll", () => processPage(), { passive: true, capture: true });
+    setInterval(processPage, 1000);
 
     observer.observe(document.body, {
       childList: true,
