@@ -15,6 +15,8 @@ class SettingsDataStore(private val context: Context) {
         val REMOVE_ADS = booleanPreferencesKey("remove_ads")
         val ENABLE_DOWNLOAD_CONTENT = booleanPreferencesKey("enable_download_content")
         val ENABLE_COPY_TO_CLIPBOARD = booleanPreferencesKey("enable_copy_to_clipboard")
+        val REEL_AUTOPLAY = booleanPreferencesKey("reel_autoplay")
+        val STORY_AUTOPLAY = booleanPreferencesKey("story_autoplay")
         val DESKTOP_LAYOUT = booleanPreferencesKey("desktop_layout")
         val IMMERSIVE_MODE = booleanPreferencesKey("immersive_mode")
         val STICKY_NAVBAR = booleanPreferencesKey("sticky_navbar")
@@ -43,6 +45,16 @@ class SettingsDataStore(private val context: Context) {
     val enableDownloadContent = context.dataStore.data.map { it[ENABLE_DOWNLOAD_CONTENT] ?: false }
     suspend fun setEnableDownloadContent(enableDownloadContent: Boolean) {
         context.dataStore.edit { it[ENABLE_DOWNLOAD_CONTENT] = enableDownloadContent }
+    }
+
+    val reelAutoplay = context.dataStore.data.map { it[REEL_AUTOPLAY] ?: true }
+    suspend fun setReelAutoplay(reelAutoplay: Boolean) {
+        context.dataStore.edit { it[REEL_AUTOPLAY] = reelAutoplay }
+    }
+
+    val storyAutoplay = context.dataStore.data.map { it[STORY_AUTOPLAY] ?: true }
+    suspend fun setStoryAutoplay(storyAutoplay: Boolean) {
+        context.dataStore.edit { it[STORY_AUTOPLAY] = storyAutoplay }
     }
 
     val enableCopyToClipboard = context.dataStore.data.map { it[ENABLE_COPY_TO_CLIPBOARD] ?: false }

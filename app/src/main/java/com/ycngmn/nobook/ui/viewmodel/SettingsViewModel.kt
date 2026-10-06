@@ -15,6 +15,8 @@ import com.ycngmn.nobook.data.local.SettingsDataStore.Companion.HIDE_STORIES
 import com.ycngmn.nobook.data.local.SettingsDataStore.Companion.HIDE_SUGGESTED
 import com.ycngmn.nobook.data.local.SettingsDataStore.Companion.IMMERSIVE_MODE
 import com.ycngmn.nobook.data.local.SettingsDataStore.Companion.PINCH_TO_ZOOM
+import com.ycngmn.nobook.data.local.SettingsDataStore.Companion.REEL_AUTOPLAY
+import com.ycngmn.nobook.data.local.SettingsDataStore.Companion.STORY_AUTOPLAY
 import com.ycngmn.nobook.data.local.SettingsDataStore.Companion.REMOVE_ADS
 import com.ycngmn.nobook.data.local.SettingsDataStore.Companion.STICKY_NAVBAR
 import kotlinx.coroutines.flow.SharingStarted
@@ -53,6 +55,16 @@ class SettingsViewModel(
     val enableCopyToClipboard = dataStore.enableCopyToClipboard.stateIn(
         scope = viewModelScope,
         initialValue = initialPrefs[ENABLE_COPY_TO_CLIPBOARD] ?: false,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val reelAutoplay = dataStore.reelAutoplay.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[REEL_AUTOPLAY] ?: true,
+        started = SharingStarted.WhileSubscribed()
+    )
+    val storyAutoplay = dataStore.storyAutoplay.stateIn(
+        scope = viewModelScope,
+        initialValue = initialPrefs[STORY_AUTOPLAY] ?: true,
         started = SharingStarted.WhileSubscribed()
     )
     val desktopLayout = dataStore.desktopLayout.stateIn(
@@ -126,6 +138,18 @@ class SettingsViewModel(
     fun setEnableCopyToClipboard(enableCopyToClipboard: Boolean) {
         viewModelScope.launch {
             dataStore.setEnableCopyToClipboard(enableCopyToClipboard)
+        }
+    }
+
+    fun setReelAutoplay(reelAutoplay: Boolean) {
+        viewModelScope.launch {
+            dataStore.setReelAutoplay(reelAutoplay)
+        }
+    }
+
+    fun setStoryAutoplay(storyAutoplay: Boolean) {
+        viewModelScope.launch {
+            dataStore.setStoryAutoplay(storyAutoplay)
         }
     }
 

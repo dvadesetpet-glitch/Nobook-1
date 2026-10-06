@@ -62,7 +62,7 @@ class MainViewModel(
             Script(true, R.raw.photo_viewer_fix, "photo_viewer_fix.js", fetchRemote = false),
             Script(true, R.raw.keep_screen_on, "keep_screen_on.js", fetchRemote = false),
             Script(!settings.hideReels.value, R.raw.reel_speed, "reel_speed.js", fetchRemote = false),
-            Script(settings.enableDownloadContent.value, R.raw.download_content, "download_content.js"),
+            Script(settings.enableDownloadContent.value, R.raw.download_content, "download_content.js", fetchRemote = false),
             Script(settings.enableCopyToClipboard.value, R.raw.copy_to_clipboard, "copy_to_clipboard.js", fetchRemote = false),
             Script(settings.stickyNavbar.value, R.raw.sticky_navbar, "sticky_navbar.js"),
             Script(!settings.pinchToZoom.value, R.raw.pinch_to_zoom, "pinch_to_zoom.js"),
@@ -70,6 +70,8 @@ class MainViewModel(
             Script(settings.hideSuggested.value, R.raw.hide_suggested, "hide_suggested.js"),
             Script(settings.hideReels.value, R.raw.hide_reels, "hide_reels.js"),
             Script(true, R.raw.watch_history, "watch_history.js", fetchRemote = false),
+            Script(true, R.raw.autoplay, "autoplay.js", fetchRemote = false),
+            Script(true, R.raw.round_badges, "round_badges.js", fetchRemote = false),
             Script(!settings.hideReels.value, R.raw.reel_controls, "reel_controls.js", fetchRemote = false),
             Script(settings.hideStories.value, R.raw.hide_stories, "hide_stories.js"),
             Script(settings.hidePeopleYouMayKnow.value, R.raw.hide_pymk, "hide_pymk.js"),
@@ -77,7 +79,10 @@ class MainViewModel(
         )
 
         viewModelScope.launch {
-            _scripts.value =
+            // autoplay.js reads this; it has to come before the scripts.
+            val autoplayConfig =
+                "window.nbAutoplay={reel:${settings.reelAutoplay.value},story:${settings.storyAutoplay.value}};\n"
+            _scripts.value = autoplayConfig +
                 fetchScripts(
                     scripts = scripts,
                     fallbackContent = { resId ->

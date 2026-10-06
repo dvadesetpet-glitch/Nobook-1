@@ -10,6 +10,20 @@
     ];
     const xpath = '//*[' + labels.map((l) => "normalize-space(text())=\"" + l + "\"").join(' or ') + ']';
 
+    const hideEl = (el) => el.style.setProperty('display', 'none', 'important');
+
+    // A full-width "Open app" button (e.g. pinned to the bottom of an opened post) is wider than the
+    // climb limit below, so hide the button itself and the bar that holds only it.
+    const hideButton = (leaf) => {
+        const button = leaf.closest('[role="button"]');
+        if (!button || button.getBoundingClientRect().height > 80) return false;
+        const bar = button.closest('.fixed-container');
+        const barOnlyHoldsIt = bar && bar.getBoundingClientRect().height <= 120 &&
+            bar.textContent.trim() === button.textContent.trim();
+        hideEl(barOnlyHoldsIt ? bar : button);
+        return true;
+    };
+
     const hide = (leaf) => {
         // Climb while the parent is still button-sized. A text match alone is not enough: the
         // logo is an icon glyph, so the parent's text differs and the blue box would stay.
@@ -19,14 +33,16 @@
             if (r.width > 180 || r.height > 60) break;
             target = target.parentElement;
         }
-        target.style.setProperty('display', 'none', 'important');
+        hideEl(target);
     };
 
     const scan = () => {
         const result = document.evaluate(xpath, document.body, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
         for (let i = 0; i < result.snapshotLength; i++) {
             const el = result.snapshotItem(i);
-            // Already hidden (by us or an ancestor): its rect is zero and would make the climb run away.
+            // The label can already be hidden (by an earlier pass or an ancestor), but its button may
+            // not be: look for the button first. The climb needs a visible label, or it would run away.
+            if (hideButton(el)) continue;
             if (el.getClientRects().length > 0) hide(el);
         }
     };

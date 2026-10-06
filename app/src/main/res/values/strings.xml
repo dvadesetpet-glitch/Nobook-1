@@ -3,6 +3,10 @@
     <string name="apply_immediately">Apply Immediately?</string>
     <string name="remove_ads_title">Remove ads</string>
     <string name="download_content_title">Download contents</string>
+    <string name="reel_autoplay_title">Reel autoplay</string>
+    <string name="reel_autoplay_summary">Start reels automatically when they open</string>
+    <string name="story_autoplay_title">Story autoplay</string>
+    <string name="story_autoplay_summary">Start story videos automatically when they open</string>
     <string name="copy_to_clipboard_title">Copy to clipboard</string>
     <string name="desktop_layout_title">Desktop layout</string>
     <string name="immersive_mode_title">Immersive mode</string>
