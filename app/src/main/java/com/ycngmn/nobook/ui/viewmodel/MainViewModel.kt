@@ -70,6 +70,8 @@ class MainViewModel(
             Script(settings.hideSuggested.value, R.raw.hide_suggested, "hide_suggested.js"),
             Script(settings.hideReels.value, R.raw.hide_reels, "hide_reels.js"),
             Script(true, R.raw.watch_history, "watch_history.js", fetchRemote = false),
+            Script(true, R.raw.autoplay, "autoplay.js", fetchRemote = false),
+            Script(true, R.raw.round_badges, "round_badges.js", fetchRemote = false),
             Script(!settings.hideReels.value, R.raw.reel_controls, "reel_controls.js", fetchRemote = false),
             Script(settings.hideStories.value, R.raw.hide_stories, "hide_stories.js"),
             Script(settings.hidePeopleYouMayKnow.value, R.raw.hide_pymk, "hide_pymk.js"),
@@ -77,7 +79,10 @@ class MainViewModel(
         )
 
         viewModelScope.launch {
-            _scripts.value =
+            // autoplay.js reads this; it has to come before the scripts.
+            val autoplayConfig =
+                "window.nbAutoplay={reel:${settings.reelAutoplay.value},story:${settings.storyAutoplay.value}};\n"
+            _scripts.value = autoplayConfig +
                 fetchScripts(
                     scripts = scripts,
                     fallbackContent = { resId ->

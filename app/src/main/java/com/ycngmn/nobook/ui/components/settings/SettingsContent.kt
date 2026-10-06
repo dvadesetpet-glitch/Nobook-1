@@ -32,6 +32,8 @@ import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.PanoramaWideAngle
 import androidx.compose.material.icons.outlined.Memory
+import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.outlined.SlowMotionVideo
 import androidx.compose.material.icons.outlined.Pinch
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.Icon
@@ -76,6 +78,8 @@ fun SettingsContent(
     val removeAds = viewModel.removeAds.collectAsState()
     val enableDownloadContent = viewModel.enableDownloadContent.collectAsState()
     val enableCopyToClipboard = viewModel.enableCopyToClipboard.collectAsState()
+    val reelAutoplay = viewModel.reelAutoplay.collectAsState()
+    val storyAutoplay = viewModel.storyAutoplay.collectAsState()
     val desktopLayout = viewModel.desktopLayout.collectAsState()
     val immersiveMode = viewModel.immersiveMode.collectAsState()
     val stickyNavbar = viewModel.stickyNavbar.collectAsState()
@@ -111,6 +115,20 @@ fun SettingsContent(
                     supportingText = stringResource(R.string.enable_copy_to_clipboard_button_on_media_view),
                     isActive = enableCopyToClipboard.value,
                     onClick = { viewModel.setEnableCopyToClipboard(!enableCopyToClipboard.value) },
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.PlayCircle,
+                    title = stringResource(R.string.reel_autoplay_title),
+                    supportingText = stringResource(R.string.reel_autoplay_summary),
+                    isActive = reelAutoplay.value,
+                    onClick = { viewModel.setReelAutoplay(!reelAutoplay.value) },
+                ),
+                SettingsItem(
+                    icon = Icons.Outlined.SlowMotionVideo,
+                    title = stringResource(R.string.story_autoplay_title),
+                    supportingText = stringResource(R.string.story_autoplay_summary),
+                    isActive = storyAutoplay.value,
+                    onClick = { viewModel.setStoryAutoplay(!storyAutoplay.value) },
                 ),
                 SettingsItem(
                     icon = Icons.Outlined.GridView,

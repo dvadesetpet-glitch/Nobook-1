@@ -7,9 +7,6 @@
     const TEXT = 'noBook';
     const MARK = 'nb-brand-text';
 
-    const isLightTheme = () =>
-        (document.querySelector('meta[name="theme-color"]')?.content || '').toLowerCase() === '#ffffff';
-
     const isLogoButton = (el) => {
         const label = (el.getAttribute('aria-label') || '').toLowerCase();
         if (!label.includes('facebook') || !el.querySelector('img')) return false;
@@ -34,7 +31,7 @@
             ].join(';'));
             container.appendChild(text);
         }
-        text.style.color = isLightTheme() ? '#0866ff' : '#ffffff';
+        text.style.color = '#0866ff'; // Facebook blue in both themes
     };
 
     const scan = () => {

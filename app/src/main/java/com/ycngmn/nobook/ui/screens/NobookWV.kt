@@ -69,12 +69,22 @@ import com.ycngmn.nobook.utils.jsBridge.WatchHistoryBridge
 import com.ycngmn.nobook.utils.rememberAutoDesktop
 import com.ycngmn.nobook.utils.rememberImeHeight
 import kotlinx.coroutines.delay
+import org.json.JSONObject
 
 private const val HOME_URL = "https://m.facebook.com/"
 
-private const val EARLY_STYLE_JS =
+// Applied before the page renders, so nothing visibly changes afterwards: the Facebook wordmark is
+// hidden (brand_logo.js puts the noBook text in) and the square count badges are drawn as circles.
+private val EARLY_CSS = listOf(
+    "[role=\"button\"][aria-label=\"Facebook logo\" i] img{visibility:hidden}",
+    ".nb[style*=\"clip-path:inset(0 0 0 0 round 3px)\"][style*=\"height:25px\"]" +
+        "{clip-path:inset(0 round 999px) !important}",
+    ".nb[style*=\"height:25px\"]>.bg-s24{border-radius:999px !important}"
+).joinToString("")
+
+private val EARLY_STYLE_JS =
     "(function(){var s=document.createElement('style');" +
-        "s.textContent='[role=\"button\"][aria-label=\"Facebook logo\" i] img{visibility:hidden}';" +
+        "s.textContent=" + JSONObject.quote(EARLY_CSS) + ";" +
         "(document.head||document.documentElement).appendChild(s);})();"
 
 @Composable

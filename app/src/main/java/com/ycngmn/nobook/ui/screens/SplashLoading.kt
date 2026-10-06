@@ -43,7 +43,7 @@ fun SplashLoading(progress: Float) {
         Box(
             Modifier.size(56.dp).shadow(12.dp)
             .clip(CircleShape)
-            .background(Color(0XFF09547A))
+            .background(Color(0XFF0866FF))
         ) {
             Icon(
                 painter = painterResource(R.mipmap.ic_launcher_foreground),
