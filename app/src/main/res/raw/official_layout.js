@@ -20,6 +20,11 @@
     const ICON_LEFT = 'calc((20vw - 29px) / 2) !important';
     const BADGE_LEFT = 'calc((20vw - 29px) / 2 + 13px) !important';
     const TABS = '[role="tab"], #' + MENU_ID;
+    const LIKE = '[role="button"][aria-label*="more reactions"]';
+    // Not inside .fixed-container: the photo viewer's own dark action bar keeps Facebook's layout.
+    const ACTION_ROW = `div:has(> ${LIKE}):not(.fixed-container *)`;
+    const ACTION_BTN = `${ACTION_ROW} > :is(${LIKE}, [role="button"][aria-label$="comment"], ` +
+        '[role="button"][aria-label$="comments"], [role="button"][aria-label$="share"])';
     const css = `
         [role="tab"][aria-label^="messages"], [role="tab"][aria-label^="marketplace"],
         [role="button"][aria-label="Facebook menu"] {
@@ -46,6 +51,28 @@
         /* Facebook's own pull-to-refresh spinner sits above the tab bar (z-index 1001) and
            covered the middle tab; pull_to_refresh.js draws Nobook's indicator instead. */
         .pull-to-refresh-spinner-container { visibility: hidden !important; }
+        /* Like / comment / share row as in the official app: plain icons with the count beside
+           them, no grey pills. m.facebook stacks the buttons with negative margins, so they are
+           laid out as a flex row instead (the label has no "comments" suffix without a count). */
+        ${ACTION_ROW} {
+            display: flex !important; flex-direction: row !important; align-items: center !important;
+            height: 46px !important; padding: 0 0 0 10px !important; box-sizing: border-box !important;
+        }
+        ${ACTION_BTN} {
+            margin: 0 16px 0 0 !important; width: auto !important; height: 46px !important;
+            display: flex !important; flex-direction: row !important; align-items: center !important;
+        }
+        ${ACTION_BTN} > div {
+            width: auto !important; height: auto !important; margin: 0 !important; padding: 0 !important;
+            display: flex !important; flex-direction: row !important; align-items: center !important;
+        }
+        ${ACTION_BTN} > div::before, ${ACTION_BTN} > div::after { background: transparent !important; }
+        ${ACTION_BTN} > div > div { margin: 0 !important; width: auto !important; height: auto !important; }
+        ${ACTION_BTN} > div > div + div { margin: 0 0 0 3px !important; padding-right: 4px !important; }
+        ${ACTION_BTN} > div > div + div:not(:has(span)) { display: none !important; }
+        ${ACTION_BTN} > div > div + div span { font-size: 14px !important; font-weight: 500 !important; }
+        ${ACTION_ROW} > [role="presentation"] { flex: 1 1 0 !important; margin: 0 !important; min-width: 0 !important; }
+        ${ACTION_ROW} > [role="button"][aria-label$="reacted"] { margin: 0 0 0 auto !important; }
     `;
     const style = document.createElement('style');
     style.textContent = css;

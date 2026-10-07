@@ -230,38 +230,6 @@
     debugLog("No media content found to download");
   };
 
-  // ---- Feed posts ----------------------------------------------------------------------------
-  // The feed has no per-post links in its DOM and plays videos from blob: URLs, so the button
-  // follows the media that fills most of the screen. Pictures are saved from their own link;
-  // videos are opened in the viewer (where the player gets a direct mp4), saved, then closed.
-  let feedTarget = null;
-  let busy = false;
-
-  const isVideoThumb = (img) => /\/t15\.5256-/.test(img.src); // poster of a video post
-
-  const findFeedMedia = () => {
-    let best = null;
-    let bestArea = 0;
-    document.querySelectorAll("video, img[src*='fbcdn']").forEach(el => {
-      if (el.closest("[data-is-h-scrollable]")) return; // stories tray, carousels of avatars
-      const r = el.getBoundingClientRect();
-      if (r.width < 200 || r.height < 150) return;
-      const w = Math.min(r.right, window.innerWidth) - Math.max(r.left, 0);
-      const h = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
-      if (w <= 0 || h <= 0) return;
-      const area = w * h;
-      if (area > bestArea) { bestArea = area; best = el; }
-    });
-    // Needs at least a third of the screen so the button never points at a neighbouring post.
-    return bestArea > window.innerWidth * window.innerHeight / 3 ? best : null;
-  };
-
-  const placeButton = (btn, el) => {
-    const r = el.getBoundingClientRect();
-    const top = Math.min(Math.max(r.top + 8, 120), window.innerHeight - 60);
-    btn.style.top = top + "px";
-  };
-
   // Streaming (blob:) videos are DASH: a video-only and an audio-only mp4 per clip. The player's
   // requests show up in the resource timing list; with the byte range removed each URL is the
   // whole track, and the app muxes the two into one mp4.
@@ -329,37 +297,6 @@
     return false;
   };
 
-  const openVideoAndDownload = (el) => {
-    busy = true;
-    const startPath = location.pathname + location.search;
-    const since = performance.now();
-    (el.closest('[role="button"]') || el).click();
-    const started = Date.now();
-    const timer = setInterval(() => {
-      const opened = location.pathname + location.search !== startPath;
-      const timedOut = Date.now() - started > 9000;
-      if ((opened && Date.now() - started > 1500 && downloadDash(since)) || timedOut) {
-        clearInterval(timer);
-        setTimeout(() => {
-          busy = false;
-          if (opened) history.back();
-        }, 800);
-      }
-    }, 400);
-  };
-
-  const downloadFeedMedia = (el) => {
-    if (busy) return;
-    if (el.tagName === "VIDEO") {
-      if (hasDirectSrc(el)) downloadMedia(el.src);
-      else openVideoAndDownload(el);
-    } else if (isVideoThumb(el)) {
-      openVideoAndDownload(el);
-    } else {
-      downloadMedia(el.src);
-    }
-  };
-
   // Create and manage download button
   const createDownloadButton = () => {
     // Add CSS for the button
@@ -401,10 +338,6 @@
     btn.setAttribute("aria-label", "Download content");
 
     btn.addEventListener("click", () => {
-      if (feedTarget) {
-        downloadFeedMedia(feedTarget);
-        return;
-      }
       // Reset state
       currentContentContainer = null;
       lastDownloadedUrl = null;
@@ -433,19 +366,7 @@
     let btn = document.getElementById(DOWNLOAD_BTN_ID);
     if (!btn) btn = createDownloadButton();
 
-    if (!(isInStoryOrReelView() && !isFeed())) {
-      feedTarget = busy ? feedTarget : findFeedMedia();
-      if (feedTarget) {
-        placeButton(btn, feedTarget);
-        btn.classList.add("visible");
-      } else {
-        btn.classList.remove("visible");
-      }
-      return;
-    }
-    feedTarget = null;
-    btn.style.top = "";
-
+    // Only in a viewer (opened video, picture, reel, story): never over the feed.
     if (isInStoryOrReelView() && !isFeed()) {
       const mediaElement = getCurrentMediaElement() || getVisibleBlobVideo();
 
